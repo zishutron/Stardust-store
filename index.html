@@ -2726,6 +2726,10 @@
 
             // Switch to details page
             switchPage('details', app.name || 'App');
+
+            // NEW: Update URL with appuid
+            const newUrl = window.location.pathname + '?appuid=' + encodeURIComponent(appId);
+            window.history.pushState({ appuid: appId }, '', newUrl);
         }
 
         function updateDetailUI(appId, app) {
@@ -3209,12 +3213,98 @@
             showLoading(true, 'Loading Stardust Store');
         });
 
+        // ============================================
+        // NEW: DEEP LINKING / URL SHARING FEATURE
+        // ============================================
+        function handleDeepLink() {
+            const params = new URLSearchParams(window.location.search);
+            const appuid = params.get('appuid');
+            if (appuid) {
+                // Wait for Firebase to load apps, then open the detail page
+                const checkInterval = setInterval(() => {
+                    if (allApps.length > 0) {
+                        clearInterval(checkInterval);
+                        const app = allApps.find(a => a.id === appuid);
+                        if (app && (app.status === 'live' || app.status === 'approved')) {
+                            viewAppDetails(appuid);
+                        } else {
+                            // App not found or not live, go to home
+                            window.history.replaceState({}, '', window.location.pathname);
+                            switchPage('home', 'Stardust Store');
+                        }
+                    }
+                }, 100);
+                // Fallback: if Firebase takes too long, check after 3 seconds
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    if (allApps.length === 0) {
+                        // Still empty, just show home
+                        window.history.replaceState({}, '', window.location.pathname);
+                        switchPage('home', 'Stardust Store');
+                    }
+                }, 3000);
+            }
+        }
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            const params = new URLSearchParams(window.location.search);
+            const appuid = params.get('appuid');
+            if (appuid && allApps.length > 0) {
+                const app = allApps.find(a => a.id === appuid);
+                if (app) {
+                    viewAppDetails(appuid);
+                }
+            } else {
+                // No appuid in URL, go back to home if on details page
+                const activePage = document.querySelector('.page.active');
+                if (activePage && activePage.id === 'page-details') {
+                    switchPage('home', 'Stardust Store');
+                }
+            }
+        });
+
+        // Override switchPage to clear appuid when navigating to root pages
+        const originalSwitchPage = switchPage;
+        switchPage = function(pageId, title) {
+            if (['home', 'search', 'ranking', 'profile'].includes(pageId)) {
+                // Remove appuid from URL when going to root pages
+                if (window.location.search.includes('appuid=')) {
+                    window.history.pushState({}, '', window.location.pathname);
+                }
+            }
+            originalSwitchPage.call(this, pageId, title);
+        };
+
+        // Override goBack to handle URL properly
+        const originalGoBack = goBack;
+        goBack = function() {
+            originalGoBack.call(this);
+            // If we went back from details, clear appuid from URL
+            if (!window.location.search.includes('appuid=') && window.history.state && window.history.state.appuid) {
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        };
+
+        // Modify the app's main initialization to call handleDeepLink after apps load
+        const originalInit = document.addEventListener('DOMContentLoaded', () => {});
+        // We need to hook into the Firebase listener when apps are first loaded
+        let deepLinkHandled = false;
+        const deepLinkObserver = setInterval(() => {
+            if (allApps.length > 0 && !deepLinkHandled) {
+                deepLinkHandled = true;
+                clearInterval(deepLinkObserver);
+                handleDeepLink();
+            }
+        }, 200);
+
         console.log('🚀 Stardust Store Pro - Fixed Download for GitHub Releases');
         console.log('📥 Download: Uses window.open with _blank for external browser');
         console.log('⭐ Review count: Updates reviewCount and recalculates average rating');
         console.log('🔄 Real-time: All counts update live for all users');
         console.log('🎨 Theme: Light mode default, remembers user preference');
         console.log('✨ Loading: Professional animated loading screen');
+        console.log('🔗 Deep Linking: URL sharing with ?appuid= support added');
     </script>
 </body>
 </html>
