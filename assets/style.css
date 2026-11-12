@@ -211,7 +211,8 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 
 /* footer + bottom nav */
 .foot{border-top:1px solid var(--line);background:var(--card);padding:30px 0 100px;color:var(--muted);font-size:14px}
-.foot-grid{display:grid;gap:24px;grid-template-columns:1fr}
+.foot-grid{display:grid;gap:24px;grid-template-columns:1fr 1fr}
+.foot-brand{grid-column:1/-1}
 .foot h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--text);margin-bottom:8px}
 .foot a{display:block;color:var(--muted);padding:3px 0}
 .foot .brand{display:flex;color:var(--text);padding:0;margin-bottom:8px}
@@ -229,7 +230,8 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
   .shelf,.shots{margin:0;padding-left:0;padding-right:0}
   .tile{flex-basis:124px;width:124px}.tile .ic{width:124px;height:124px}
   .tiles{grid-template-columns:repeat(auto-fill,minmax(124px,1fr))}
-  .foot-grid{grid-template-columns:2fr 1fr 1fr}
+  .foot-grid{grid-template-columns:1.8fr 1fr 1fr 1fr 1fr}
+  .foot-brand{grid-column:auto}
   .foot{padding-bottom:30px}
   .bottom-nav,.stickybar{display:none!important}
   .btn-lg{min-width:230px}
@@ -270,3 +272,17 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .pf-legal{display:flex;flex-wrap:wrap;gap:6px 18px;margin:18px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
 .pf-legal a{color:var(--brand);text-decoration:underline;text-underline-offset:3px}
 .pf-edit .btn{height:42px}
+
+/* info pages: about, support, founder */
+.doc{max-width:760px;margin:0 auto}
+.doc h2{font-size:20px;margin:26px 0 10px}
+.doc ul{padding-left:20px}.doc li{margin-bottom:6px}
+.support-card{text-align:center;display:grid;justify-items:center;gap:6px;padding:26px}
+.support-card p{margin:0}
+.support-card .mail{font-size:clamp(16px,4.4vw,22px);font-weight:700;overflow-wrap:anywhere}
+.founder{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.founder h2{margin:0}.founder p{margin:0}
+.social-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin:12px 0 18px}
+.social{display:flex;flex-direction:column;gap:2px;padding:14px 16px;color:var(--text)}
+.social:hover{border-color:var(--brand);text-decoration:none}
+.social small{color:var(--muted);overflow-wrap:anywhere}
