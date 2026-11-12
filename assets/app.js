@@ -46,10 +46,10 @@
       (a.tags || []).some(function (t) { return t.toLowerCase().indexOf(q) > -1; });
   }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function rowHtml(a) {
+  function rowHtml(a, note) {
     return '<a class="row" href="/apps/' + encodeURIComponent(a.slug) + '/"><img class="ic" src="' + esc(a.icon) + '" width="64" height="64" loading="lazy" alt="">' +
       '<span class="meta"><span class="nm">' + esc(a.name) + '</span><span class="ds">' + esc(a.short || a.cat) + '</span>' +
-      '<span class="st">' + (a.r ? '<span class="star">★</span> ' + a.r.toFixed(1) : '<span class="new">New</span>') + ' · ' + esc(a.cat) + (a.size ? ' · ' + esc(a.size) : '') + '</span></span></a>';
+      '<span class="st">' + (a.r ? '<span class="star">★</span> ' + a.r.toFixed(1) : '<span class="new">New</span>') + ' · ' + esc(a.cat) + (a.size ? ' · ' + esc(a.size) : '') + '</span>' + (note ? '<span class="st">' + esc(note) + '</span>' : '') + '</span></a>';
   }
 
   /* ---------- header search suggestions ---------- */
@@ -106,23 +106,47 @@
     run();
   }
 
-  /* ---------- library page ---------- */
-  var saved = $('#saved'), hist = $('#history');
-  if (saved && hist) {
-    var pf = $('#profileForm');
-    pf.name.value = store.get('zt_name', ''); pf.handle.value = store.get('zt_handle', '');
-    pf.addEventListener('submit', function (e) {
-      e.preventDefault(); store.set('zt_name', pf.name.value.trim()); store.set('zt_handle', pf.handle.value.trim());
-      $('#profileMsg').textContent = 'Saved ✓';
+  /* ---------- library: profile card, saved apps, download history ---------- */
+  var card = $('#profileCard');
+  if (card) {
+    var cleanHandle = function (h) { return String(h || '').trim().replace(/^@+/, '').replace(/\s+/g, ''); };
+    var paint = function () {
+      var name = store.get('zt_name', '') || 'Guest User', handle = cleanHandle(store.get('zt_handle', '')) || 'guest', bio = store.get('zt_bio', '');
+      $('#pfName').textContent = name; $('#pfHandle').textContent = '@' + handle;
+      $('#pfAvatar').textContent = (name.trim().charAt(0) || 'G').toUpperCase();
+      var b = $('#pfBio'); b.textContent = bio || 'No bio yet. Tap the pencil to add one.'; b.classList.toggle('muted', !bio);
+      $('#savedCount').textContent = store.get('zt_saved', []).length || '';
+      $('#historyCount').textContent = store.get('zt_history', []).length || '';
+    };
+    var pf = $('#pfForm'), view = $('.pf-view', card);
+    $('#pfEdit').addEventListener('click', function () {
+      pf.name.value = store.get('zt_name', ''); pf.handle.value = cleanHandle(store.get('zt_handle', '')); pf.bio.value = store.get('zt_bio', '');
+      view.hidden = true; pf.hidden = false; pf.name.focus();
     });
+    $('#pfCancel').addEventListener('click', function () { pf.hidden = true; view.hidden = false; });
+    pf.addEventListener('submit', function (e) {
+      e.preventDefault();
+      store.set('zt_name', pf.name.value.trim()); store.set('zt_handle', cleanHandle(pf.handle.value)); store.set('zt_bio', pf.bio.value.trim());
+      pf.hidden = true; view.hidden = false; paint(); toast('Profile saved');
+    });
+    paint();
+  }
+  var saved = $('#saved'), hist = $('#history');
+  if (saved || hist) {
     loadIndex().then(function (apps) {
       var byId = {}; apps.forEach(function (a) { byId[a.id] = a; });
-      var ids = store.get('zt_saved', []).filter(function (id) { return byId[id]; });
-      saved.innerHTML = ids.length ? ids.map(function (id) { return rowHtml(byId[id]); }).join('') : '<p class="muted">No saved apps yet. Tap “Save” on any app page.</p>';
-      var h = store.get('zt_history', []).filter(function (x) { return byId[x.id]; });
-      hist.innerHTML = h.length ? h.map(function (x) { return rowHtml(byId[x.id]); }).join('') : '<p class="muted">No downloads yet.</p>';
+      if (saved) {
+        var ids = store.get('zt_saved', []).filter(function (id) { return byId[id]; });
+        saved.innerHTML = ids.length ? ids.map(function (id) { return rowHtml(byId[id]); }).join('') : '<p class="muted">No saved apps yet. Tap “Save” on any app page and it will show up here.</p>';
+      }
+      if (hist) {
+        var h = store.get('zt_history', []).filter(function (x) { return byId[x.id]; });
+        var fmt = function (t) { try { return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
+        hist.innerHTML = h.length ? h.map(function (x) { return rowHtml(byId[x.id], x.t ? 'Downloaded ' + fmt(x.t) : ''); }).join('') : '<p class="muted">No downloads yet.</p>';
+      }
     });
-    $('#clearHistory').addEventListener('click', function () { store.set('zt_history', []); hist.innerHTML = '<p class="muted">No downloads yet.</p>'; });
+    var ch = $('#clearHistory');
+    if (ch) ch.addEventListener('click', function () { store.set('zt_history', []); hist.innerHTML = '<p class="muted">No downloads yet.</p>'; });
   }
 
   /* ---------- app page ---------- */
@@ -142,14 +166,21 @@
     } else desc.classList.remove('clamp');
   }
 
-  // lightbox
+  // lightbox: × button, tap outside, Esc, or the phone's back button all close it
   var lb = $('#lightbox');
+  function openLb(src) { $('img', lb).src = src; lb.hidden = false; document.body.style.overflow = 'hidden'; try { history.pushState({ lb: 1 }, ''); } catch (e) { /* ignore */ } }
+  function closeLb(fromPop) {
+    if (!lb || lb.hidden) return;
+    lb.hidden = true; document.body.style.overflow = '';
+    if (!fromPop && history.state && history.state.lb) history.back();
+  }
   document.addEventListener('click', function (e) {
     var z = e.target.closest('[data-zoom]');
-    if (z && lb) { $('img', lb).src = z.src; lb.hidden = false; }
-    else if (lb && !lb.hidden && e.target.closest('#lightbox')) lb.hidden = true;
+    if (z && lb) openLb(z.src);
+    else if (lb && !lb.hidden && e.target.closest('#lightbox')) closeLb();
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && lb) lb.hidden = true; });
+  window.addEventListener('popstate', function () { closeLb(true); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLb(); });
 
   // save to library
   var saveBtn = $('#saveBtn');

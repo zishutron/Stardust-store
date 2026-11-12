@@ -248,3 +248,25 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .clamp{max-height:9.6em;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
 .clamp.open{max-height:none;-webkit-mask-image:none;mask-image:none}
 .more{margin:-4px 0 8px;padding:6px 0}
+
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.center{text-align:center}
+.lb-close{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:32px;line-height:1;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px)}
+.lb-close:hover{background:rgba(255,255,255,.3)}
+.perms{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.perms li{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-weight:600;font-size:14px}
+.perms li::before{content:"✓";color:var(--ok);font-weight:800}
+/* library profile card */
+.profile{padding:20px;max-width:560px;margin:6px auto 0}
+.pf-top{display:flex;align-items:center;gap:16px}
+.avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;font-size:32px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.pf-info{flex:1;min-width:0}
+.pf-info h2{font-size:20px;overflow-wrap:anywhere}
+.pf-handle{margin:0;color:var(--muted)}
+.pf-bio{margin:14px 0 0;overflow-wrap:anywhere;white-space:pre-line}
+.pf-actions{display:grid;gap:10px;margin-top:18px}
+.pf-actions .btn{justify-content:flex-start;height:50px}
+.pf-actions .btn small{margin-left:auto;color:var(--muted);font-weight:600}
+.pf-legal{display:flex;flex-wrap:wrap;gap:6px 18px;margin:18px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
+.pf-legal a{color:var(--brand);text-decoration:underline;text-underline-offset:3px}
+.pf-edit .btn{height:42px}
