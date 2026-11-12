@@ -96,24 +96,25 @@ async function loadApps() {
 }
 
 async function loadReviews(apps) {
-  if (REVIEWS_FILE) return JSON.parse(await readFile(REVIEWS_FILE, 'utf8')) || {};
-  try { return (await getJson(`${DB}/reviews.json`, 2)) || {}; }
+  // returns { data, known }: known = ids whose reviews were really read (so "no reviews" is trustworthy)
+  if (REVIEWS_FILE) { const data = JSON.parse(await readFile(REVIEWS_FILE, 'utf8')) || {}; return { data, known: new Set(apps.map((a) => a.id)) }; }
+  try { const data = (await getJson(`${DB}/reviews.json`, 2)) || {}; return { data, known: new Set(apps.map((a) => a.id)) }; }
   catch (e) {
     console.warn(`[build] reviews.json not readable (${e.message}); trying per-app reviews`);
   }
-  const out = {};
+  const data = {}; const known = new Set();
   const queue = [...apps];
   await Promise.all(Array.from({ length: 5 }, async () => {
     while (queue.length) {
       const a = queue.shift();
-      try { const r = await getJson(`${DB}/reviews/${encodeURIComponent(a.id)}.json`, 2); if (r) out[a.id] = r; }
-      catch { /* reviews will be loaded live in the browser instead */ }
+      try { const r = await getJson(`${DB}/reviews/${encodeURIComponent(a.id)}.json`, 2); if (r) data[a.id] = r; known.add(a.id); }
+      catch { /* stored rating is used instead */ }
     }
   }));
-  return out;
+  return { data, known };
 }
 
-function normalize(apps, reviewsAll) {
+function normalize(apps, reviewsAll, knownReviews) {
   const out = [];
   for (const a of apps) {
     if (!LIVE.has(str(a.status).toLowerCase())) continue;
@@ -143,7 +144,10 @@ function normalize(apps, reviewsAll) {
       permissions: list(a.permissions), history, dev: str(a.developerName || a.developer) || 'Independent developer',
       website: httpUrl(a.website), privacy: httpUrl(a.privacyPolicy), youtube: httpUrl(a.youtube),
       minAndroid: str(a.minAndroid) || '5.0', language: str(a.language) || 'English', sha256: /^[a-f0-9]{64}$/i.test(str(a.sha256)) ? str(a.sha256) : '',
-      dl: Math.max(0, num(a.downloadCount)), rc: Math.max(0, num(a.reviewCount)), rating: Math.min(5, Math.max(0, num(a.rating))),
+      // rating + count always come from the real reviews when they could be read (the stored 4.5 is only a legacy default)
+      dl: Math.max(0, num(a.downloadCount)),
+      rc: knownReviews.has(a.id) ? revs.length : Math.max(0, num(a.reviewCount)),
+      rating: knownReviews.has(a.id) ? (revs.length ? Math.round((revs.reduce((t, r) => t + r.rating, 0) / revs.length) * 10) / 10 : 0) : Math.min(5, Math.max(0, num(a.rating))),
       verified: !!a.verified, ts, updatedTs, reviews: revs
     });
   }
@@ -560,8 +564,8 @@ async function main() {
   console.log(`[build] source: ${APPS_FILE || DB}`);
   console.log(`[build] base url: ${BASE}`);
   const rawApps = await loadApps();
-  const reviews = await loadReviews(rawApps.filter((a) => LIVE.has(str(a.status).toLowerCase())));
-  const apps = normalize(rawApps, reviews);
+  const { data: reviews, known } = await loadReviews(rawApps.filter((a) => LIVE.has(str(a.status).toLowerCase())));
+  const apps = normalize(rawApps, reviews, known);
   console.log(`[build] ${rawApps.length} app record(s), ${apps.length} live`);
 
   // ---- incremental build -------------------------------------------------------
