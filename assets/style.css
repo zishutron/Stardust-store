@@ -51,20 +51,18 @@ svg.mi{width:12px;height:12px;display:inline;vertical-align:-1px;stroke-width:2.
 .suggest img{width:36px;height:36px;border-radius:9px;object-fit:cover}
 .suggest small{display:block;color:var(--muted)}
 .catbar{border-top:1px solid var(--line)}
-.cat-in{display:flex;gap:8px;overflow-x:auto;padding-top:9px;padding-bottom:9px;scrollbar-width:none}
+.cat-in{display:flex;gap:6px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:none}
 .cat-in::-webkit-scrollbar{display:none}
-.cat-in a{flex:0 0 auto;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:600;color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent);border:1px solid color-mix(in srgb,var(--brand) 35%,transparent)}
-.cat-in a:hover{text-decoration:none;background:color-mix(in srgb,var(--brand) 20%,transparent)}
-.cat-in a.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
-/* Play-Store style: on the home page the pills stay hidden until the visitor has scrolled past a few rails */
-.catbar.reveal{position:absolute;left:0;right:0;top:100%;background:var(--card);opacity:0;transform:translateY(-10px);pointer-events:none;visibility:hidden;transition:opacity .2s,transform .2s,visibility .2s;box-shadow:0 8px 16px rgba(15,23,42,.08)}
-.catbar.reveal.show{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+.cat-in a{flex:0 0 auto;padding:5px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);background:var(--soft)}
+.cat-in a:hover{text-decoration:none;color:var(--text)}
+.cat-in a.on{background:var(--brand);color:var(--brand-ink)}
 
 main{overflow-x:clip;padding-top:24px;padding-bottom:56px;min-height:60vh}
 .page-title{font-size:clamp(22px,4vw,30px);letter-spacing:-.5px;margin-bottom:14px}
 .page-title small{display:block;font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:2px}
 .intro{color:var(--muted);max-width:70ch}
-.crumbs{font-size:13px;color:var(--muted);margin-bottom:12px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.crumbs{font-size:16px;color:var(--muted);margin:0 0 8px;display:flex;flex-wrap:wrap;gap:2px 6px;align-items:center}
+.crumbs a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;font-weight:600}
 .crumbs i{font-style:normal;opacity:.5}
 .sec{margin:26px 0}
 .sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
@@ -157,7 +155,7 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .cta{display:flex;flex-wrap:wrap;gap:10px}
 .tagline{font-size:17px;color:var(--muted);margin:18px 0 0}
 .shots{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:8px;margin:0 -16px;padding-left:16px;padding-right:16px}
-.shots img{height:320px;width:auto;border-radius:14px;border:1px solid var(--line);scroll-snap-align:start;cursor:zoom-in;background:var(--soft);flex-shrink:0}
+.shots img{height:320px;width:auto;max-width:none;object-fit:contain;border-radius:14px;border:1px solid var(--line);scroll-snap-align:start;cursor:zoom-in;background:var(--soft);flex-shrink:0}
 .prose p{color:var(--text);opacity:.92;max-width:75ch}
 .wn{margin:0;padding-left:20px}
 .wn li{margin-bottom:4px}
@@ -240,7 +238,7 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
   .app-head{flex-direction:column;align-items:center;text-align:center}
   .app-main h1,.facts,.cta{justify-content:center}
   .app-ic{width:96px;height:96px}
-  .shots img{height:260px}
+  .shots img{height:280px}
   .brand span{display:none}
   .info div{flex-direction:column;gap:0}.info dd{text-align:left}
 }
