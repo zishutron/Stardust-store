@@ -215,9 +215,16 @@ function layout({ title, desc, path, body, ld = [], image, noindex = false, ogTy
   const canonical = `${BASE}${path}`;
   const img = image || `${BASE}/favicon.png`;
   const nav = (href, label, key) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${label}</a>`;
+  const pillLink = (href, label, on) => `<a href="${href}"${on ? ' class="on"' : ''}>${esc(label)}</a>`;
+  const col = (k) => NAV_COLLECTIONS.find((c) => c.key === k);
+  const colPill = (k) => (col(k) ? [pillLink(col(k).path, col(k).name, activeCat === k)] : []);
+  const catPills = cats.map((c) => pillLink(`/category/${c.slug}/`, c.name, activeCat === c.slug));
+  const mid = Math.ceil(catPills.length / 2);
+  // Popular Apps + Popular games right after "All"; Editor's choice + Discover in the middle of the categories
+  const pillItems = [...colPill('popular-apps'), ...colPill('popular-games'), ...catPills.slice(0, mid), ...colPill('editors-choice'), ...colPill('discover'), ...catPills.slice(mid)];
   const catbar = [`<a href="/"${(page === 'home' || page === 'apps') && !activeCat ? ' class="on"' : ''}>All</a>`,
-    ...NAV_COLLECTIONS.map((c) => `<a href="${c.path}"${activeCat === c.key ? ' class="on"' : ''}>${esc(c.name)}</a>`),
-    ...cats.map((c) => `<a href="/category/${c.slug}/"${activeCat === c.slug ? ' class="on"' : ''}>${esc(c.name)}</a>`)].join('');
+
+    ...pillItems].join('');
   const bn = (href, label, key, icon) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${icon}<span>${label}</span></a>`;
   return `<!DOCTYPE html>
 <html lang="en">
@@ -301,13 +308,16 @@ function homePage(apps, cats) {
       <span><span class="tag">${'Featured'}</span><strong>${esc(a.name)}</strong><span class="ds">${esc(trunc(a.short || a.catRaw, 80))}</span></span></span></a>`).join('')}</section>` : '';
   const catTiles = cats.length ? `<section class="sec"><div class="sec-h"><h2>Browse categories</h2></div><div class="cat-grid">${cats.map((c) =>
     `<a class="cat-tile" href="/category/${c.slug}/"><span class="ce">${c.icon}</span><span>${esc(c.name)}<small>${c.count} ${c.count === 1 ? 'app' : 'apps'}</small></span></a>`).join('')}</div></section>` : '';
+  const catRails = cats.map((c) => shelf(c.name, popular.filter((a) => a.catSlug === c.slug).slice(0, 15), `/category/${c.slug}/`));
+  const colRails = NAV_COLLECTIONS.map((c) => shelf(c.name, c.apps.slice(0, 12), c.path));
+  const railsMixed = catRails.join('\n');
   const body = `
 <h1 class="sr-only">${SITE} — ${esc(TAGLINE)}</h1>
 ${hero}
-${NAV_COLLECTIONS.map((c) => shelf(c.name, c.apps.slice(0, 12), c.path)).join('\n')}
+${colRails.join('\n')}
 ${shelf('New releases', [...apps].sort(byNew).slice(0, 10), '/apps/')}
 ${shelf('Recently updated', [...apps].sort(byUpd).slice(0, 10), '/top/#updated')}
-${cats.map((c) => shelf(c.name, popular.filter((a) => a.catSlug === c.slug).slice(0, 15), `/category/${c.slug}/`)).join('\n')}
+${railsMixed}
 ${apps.length ? '' : '<div class="empty"><h2>No apps yet</h2><p>New apps will appear here soon.</p></div>'}`;
   const ld = [{ '@context': 'https://schema.org', '@type': 'WebSite', name: SITE, url: `${BASE}/`, description: SITE_DESC,
     publisher: { '@type': 'Organization', name: 'ZISHU TRON', url: `${BASE}/`, logo: `${BASE}/favicon.png` },
