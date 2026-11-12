@@ -74,7 +74,7 @@
   $$('select[data-sort]').forEach(function (sel) {
     sel.addEventListener('change', function () {
       var box = $(sel.dataset.sort), k = sel.value; if (!box) return;
-      var rows = $$('.row', box);
+      var rows = $$('.row,.tile', box);
       rows.sort(function (a, b) { return k === 'n' ? a.dataset.n.localeCompare(b.dataset.n) : (+b.dataset[k]) - (+a.dataset[k]); });
       rows.forEach(function (r) { box.appendChild(r); });
     });
