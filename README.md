@@ -34,7 +34,7 @@ Hand-written files: `assets/style.css`, `assets/app.js`, `scripts/build-static.m
 1. **Settings → Pages → Source: GitHub Actions.**
 2. **Settings → Actions → General → Workflow permissions: Read and write.**
 3. Optional repository **variables** (Settings → Secrets and variables → Actions → Variables):
-   - `SITE_BASE_URL` — your public URL, no trailing slash (default `https://stardustapkstore.zishuai.cloud`)
+   - `SITE_BASE_URL` — your public URL, no trailing slash (default `https://zishutronapps.zishuai.cloud`)
    - `DEV_CONSOLE_URL` — shows a "For developers" link in the footer
 4. **Actions → Publish ZishuTron Apps → Run workflow** for the first build.
 
