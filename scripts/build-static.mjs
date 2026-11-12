@@ -191,11 +191,32 @@ const rowsSection = (title, apps, more) => apps.length ? `<section class="sec"><
 
 const sortBar = (target) => `<label class="sortbar">Sort by <select data-sort="${target}" aria-label="Sort apps"><option value="d">Most downloaded</option><option value="r">Top rated</option><option value="t">Newest</option><option value="u">Recently updated</option><option value="n">Name A–Z</option></select></label>`;
 
+// Featured collections shown first on the home page and in the pill bar
+let NAV_COLLECTIONS = [];
+function buildCollections(apps) {
+  const pop = [...apps].sort(byDl);
+  // Discover: one top app from every category in turn, so the rail is a varied mix
+  const groups = new Map();
+  for (const a of pop) { if (!groups.has(a.catSlug)) groups.set(a.catSlug, []); groups.get(a.catSlug).push(a); }
+  const discover = []; const lists = [...groups.values()];
+  for (let i = 0; discover.length < apps.length; i++) { let added = false; for (const l of lists) if (l[i]) { discover.push(l[i]); added = true; } if (!added) break; }
+  // Editor's choice: apps marked verified; until some are, the best rated apps that have a feature banner
+  const verified = pop.filter((a) => a.verified);
+  const editors = verified.length ? verified : [...apps].filter((a) => a.banner && a.rc > 0).sort(byRate);
+  return [
+    { key: 'discover', path: '/discover/', name: 'Discover', apps: discover, title: 'Discover New Android Apps & Games', intro: `A fresh mix of the best apps and games from every category on ${SITE}.` },
+    { key: 'popular-apps', path: '/popular-apps/', name: 'Popular Apps', apps: pop.filter((a) => a.catSlug !== 'games'), title: 'Popular Android Apps — Most Downloaded', intro: 'The most downloaded Android apps on ZishuTron Apps.' },
+    { key: 'popular-games', path: '/popular-games/', name: 'Popular games', apps: pop.filter((a) => a.catSlug === 'games'), title: 'Popular Android Games — Most Downloaded', intro: 'The most downloaded Android games on ZishuTron Apps.' },
+    { key: 'editors-choice', path: '/editors-choice/', name: 'Editor’s choice', apps: editors, title: 'Editor’s Choice — Hand-picked Android Apps', intro: 'Verified and top rated apps our team recommends.' }
+  ].filter((c) => c.apps.length);
+}
+
 function layout({ title, desc, path, body, ld = [], image, noindex = false, ogType = 'website', page = '', cats = [], activeCat = '', head = '' }) {
   const canonical = `${BASE}${path}`;
   const img = image || `${BASE}/favicon.png`;
   const nav = (href, label, key) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${label}</a>`;
   const catbar = [`<a href="/"${(page === 'home' || page === 'apps') && !activeCat ? ' class="on"' : ''}>All</a>`,
+    ...NAV_COLLECTIONS.map((c) => `<a href="${c.path}"${activeCat === c.key ? ' class="on"' : ''}>${esc(c.name)}</a>`),
     ...cats.map((c) => `<a href="/category/${c.slug}/"${activeCat === c.slug ? ' class="on"' : ''}>${esc(c.name)}</a>`)].join('');
   const bn = (href, label, key, icon) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${icon}<span>${label}</span></a>`;
   return `<!DOCTYPE html>
@@ -277,13 +298,13 @@ function homePage(apps, cats) {
   const hero = heroPool.length ? `<section class="hero" aria-label="Featured apps">${heroPool.map((a, i) => `
     <a class="hero-slide" href="${a.path}">${a.banner ? `<img class="hero-bg" src="${esc(a.banner)}" alt="" ${i ? 'loading="lazy"' : 'fetchpriority="high"'} decoding="async">` : ''}
       <span class="hero-body"><img class="ic" src="${esc(a.icon)}" width="72" height="72" alt="">
-      <span><span class="tag">${i === 0 ? 'Editor’s choice' : 'Featured'}</span><strong>${esc(a.name)}</strong><span class="ds">${esc(trunc(a.short || a.catRaw, 80))}</span></span></span></a>`).join('')}</section>` : '';
+      <span><span class="tag">${'Featured'}</span><strong>${esc(a.name)}</strong><span class="ds">${esc(trunc(a.short || a.catRaw, 80))}</span></span></span></a>`).join('')}</section>` : '';
   const catTiles = cats.length ? `<section class="sec"><div class="sec-h"><h2>Browse categories</h2></div><div class="cat-grid">${cats.map((c) =>
     `<a class="cat-tile" href="/category/${c.slug}/"><span class="ce">${c.icon}</span><span>${esc(c.name)}<small>${c.count} ${c.count === 1 ? 'app' : 'apps'}</small></span></a>`).join('')}</div></section>` : '';
   const body = `
 <h1 class="sr-only">${SITE} — ${esc(TAGLINE)}</h1>
 ${hero}
-${shelf('Popular right now', popular.slice(0, 10), '/top/')}
+${NAV_COLLECTIONS.map((c) => shelf(c.name, c.apps.slice(0, 12), c.path)).join('\n')}
 ${shelf('New releases', [...apps].sort(byNew).slice(0, 10), '/apps/')}
 ${shelf('Recently updated', [...apps].sort(byUpd).slice(0, 10), '/top/#updated')}
 ${cats.map((c) => shelf(c.name, popular.filter((a) => a.catSlug === c.slug).slice(0, 15), `/category/${c.slug}/`)).join('\n')}
@@ -496,6 +517,7 @@ function sitemap(apps, cats) {
   const urls = [
     { loc: '/', lm: last, p: '1.0', f: 'daily' }, { loc: '/apps/', lm: last, p: '0.9', f: 'daily' }, { loc: '/top/', lm: last, p: '0.8', f: 'daily' },
     { loc: '/about/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/support/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/founder/', lm: 0, p: '0.4', f: 'monthly' },
+    ...NAV_COLLECTIONS.map((c) => ({ loc: c.path, lm: last, p: '0.7', f: 'daily' })),
     ...cats.map((c) => ({ loc: `/category/${c.slug}/`, lm: c.last, p: '0.7', f: 'daily' })),
     ...apps.map((a) => ({ loc: a.path, lm: a.updatedTs, p: '0.8', f: 'weekly' }))
   ];
@@ -555,6 +577,7 @@ async function main() {
     if (prev.count > 0) throw new Error('Firebase returned 0 live apps but the site currently has apps. Refusing to publish an empty store (set ALLOW_EMPTY=1 to override).');
   }
 
+  NAV_COLLECTIONS = buildCollections(listApps);
   // categories (only ones that have apps)
   const catMap = new Map();
   for (const a of listApps) {
@@ -565,12 +588,16 @@ async function main() {
 
   if (!same) {
     // clean previously generated folders, then rebuild every listing page
-    for (const d of ['apps', 'category', 'top', 'search', 'library', 'about', 'support', 'founder']) await rm(join(ROOT, d), { recursive: true, force: true });
+    for (const d of ['discover', 'popular-apps', 'popular-games', 'editors-choice', 'apps', 'category', 'top', 'search', 'library', 'about', 'support', 'founder']) await rm(join(ROOT, d), { recursive: true, force: true });
     await write('index.html', homePage(listApps, cats));
     await write('apps/index.html', listPage({
       title: `All Android Apps & Games — Free APK Download | ${SITE}`, h1: 'All apps', path: '/apps/', apps: [...listApps].sort(byDl), cats, page: 'apps',
       intro: `Browse every Android app and game on ${SITE}. Sort by downloads, rating or latest update.`, crumbs: crumbHtml([['/', 'Home'], [null, 'All apps']])
     }));
+    for (const c of NAV_COLLECTIONS) {
+      await write(`${c.path.slice(1)}index.html`, listPage({ title: `${c.title} | ${SITE}`, h1: c.name, path: c.path, apps: c.apps, cats, page: 'apps', activeCat: c.key, intro: c.intro,
+        crumbs: crumbHtml([['/', 'Home'], [null, c.name]]) }));
+    }
     for (const c of cats) {
       await write(`category/${c.slug}/index.html`, listPage({
         title: `Best ${c.name} Apps for Android — Free APK Download | ${SITE}`, h1: `${c.name} apps`, path: `/category/${c.slug}/`,
