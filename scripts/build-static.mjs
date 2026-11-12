@@ -186,7 +186,7 @@ const rowsSection = (title, apps, more) => apps.length ? `<section class="sec"><
 
 const sortBar = (target) => `<label class="sortbar">Sort by <select data-sort="${target}" aria-label="Sort apps"><option value="d">Most downloaded</option><option value="r">Top rated</option><option value="t">Newest</option><option value="u">Recently updated</option><option value="n">Name A–Z</option></select></label>`;
 
-function layout({ title, desc, path, body, ld = [], image, noindex = false, ogType = 'website', page = '', cats = [], activeCat = '', head = '', catMode = 'none' }) {
+function layout({ title, desc, path, body, ld = [], image, noindex = false, ogType = 'website', page = '', cats = [], activeCat = '', head = '' }) {
   const canonical = `${BASE}${path}`;
   const img = image || `${BASE}/favicon.png`;
   const nav = (href, label, key) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${label}</a>`;
@@ -231,7 +231,7 @@ ${head}${ld.map(jsonLd).join('\n')}
     </form>
     <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">${svg.moon}</button>
   </div>
-  ${catMode === 'none' ? '' : `<div class="catbar${catMode === 'reveal' ? ' reveal' : ''}"><div class="wrap cat-in">${catbar}</div></div>`}
+  <div class="catbar"><div class="wrap cat-in">${catbar}</div></div>
 </header>
 <main id="main" class="wrap">
 ${body}
@@ -289,7 +289,7 @@ ${apps.length ? '' : '<div class="empty"><h2>No apps yet</h2><p>New apps will ap
   // old links like /?appuid=<firebaseId> keep working: redirect to the new static page
   const idmap = Object.fromEntries(apps.map((a) => [a.id, a.slug]));
   const head = `<script>(function(){var q=new URLSearchParams(location.search).get('appuid');if(!q)return;var m=${JSON.stringify(idmap).replace(/</g, '\\u003c')};if(m[q])location.replace('/apps/'+m[q]+'/')})()</script>\n`;
-  return layout({ title: `${SITE} — ${TAGLINE}`, desc: SITE_DESC, path: '/', body, ld, page: 'home', cats, head, catMode: 'reveal', image: heroPool[0]?.icon });
+  return layout({ title: `${SITE} — ${TAGLINE}`, desc: SITE_DESC, path: '/', body, ld, page: 'home', cats, head, image: heroPool[0]?.icon });
 }
 
 function listPage({ title, h1, intro, path, apps, cats, page, activeCat, crumbs }) {
@@ -300,7 +300,7 @@ ${intro ? `<p class="intro">${esc(intro)}</p>` : ''}
 ${apps.length ? `${sortBar('#list')}<div class="tiles" id="list">${apps.slice(0, 500).map(tile).join('')}</div>` : '<div class="empty"><h2>Nothing here yet</h2><p>Check back soon.</p></div>'}`;
   const ld = [{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, url: `${BASE}${path}`,
     mainEntity: { '@type': 'ItemList', itemListElement: apps.slice(0, 30).map((a, i) => ({ '@type': 'ListItem', position: i + 1, url: `${BASE}${a.path}`, name: a.name })) } }];
-  return layout({ title, desc: intro, path, body, ld, page, cats, activeCat, catMode: 'always' });
+  return layout({ title, desc: intro, path, body, ld, page, cats, activeCat });
 }
 
 const crumbHtml = (items) => `<nav class="crumbs" aria-label="Breadcrumb">${items.map(([h, l]) => (h ? `<a href="${h}">${esc(l)}</a>` : `<span aria-current="page">${esc(l)}</span>`)).join('<i>›</i>')}</nav>`;
@@ -379,7 +379,7 @@ function appPage(a, apps, cats) {
     </div>
   </header>
   ${a.short ? `<p class="tagline">${esc(a.short)}</p>` : ''}
-  ${a.shots.length ? `<section class="sec"><h2>Screenshots</h2><div class="shots">${a.shots.map((u, i) => `<img src="${esc(u)}" height="320" loading="lazy" decoding="async" alt="${esc(a.name)} screenshot ${i + 1}" data-zoom>`).join('')}</div></section>` : ''}
+  ${a.shots.length ? `<section class="sec"><h2>Screenshots</h2><div class="shots">${a.shots.map((u, i) => `<img src="${esc(u)}" loading="lazy" decoding="async" alt="${esc(a.name)} screenshot ${i + 1}" data-zoom>`).join('')}</div></section>` : ''}
   <section class="sec prose"><h2>About ${esc(a.name)}</h2><div class="clamp" id="desc">${paras}</div><button class="linkbtn more" id="descMore" type="button" aria-expanded="false" aria-controls="desc" hidden>Show more</button>${a.tags.length ? `<div class="chips">${a.tags.map((t) => `<a class="chip" href="/search/?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>` : ''}</section>
   ${a.whatsNew.length ? `<section class="sec"><h2>What’s new in ${esc(a.version)}</h2><ul class="wn">${a.whatsNew.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>` : ''}
   <section class="sec"><h2>App information</h2><dl class="info">${info}</dl></section>
@@ -409,7 +409,7 @@ function appPage(a, apps, cats) {
     ...(a.rc > 0 && a.rating > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: a.rating.toFixed(1), ratingCount: a.rc, bestRating: 5, worstRating: 1 } } : {}),
     ...(a.shots.length ? { screenshot: a.shots } : {})
   }, crumbLd(crumbs)];
-  return layout({ title, desc, path: a.path, body, ld, page: 'apps', cats, ogType: 'website', image: a.banner || a.icon.startsWith('http') ? (a.banner || a.icon) : undefined });
+  return layout({ title, desc, path: a.path, body, ld, page: 'app', cats, ogType: 'website', image: a.banner || a.icon.startsWith('http') ? (a.banner || a.icon) : undefined });
 }
 
 function notFound(cats) {
