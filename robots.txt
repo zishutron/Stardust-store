@@ -3,4 +3,4 @@ Allow: /
 Disallow: /search/
 Disallow: /library/
 
-Sitemap: https://stardustapkstore.zishuai.cloud/sitemap.xml
+Sitemap: https://zishutronapps.zishuai.cloud/sitemap.xml
