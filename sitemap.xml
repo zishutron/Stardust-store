@@ -6,6 +6,10 @@
   <url><loc>https://zishutronapps.zishuai.cloud/about/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://zishutronapps.zishuai.cloud/support/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://zishutronapps.zishuai.cloud/founder/</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://zishutronapps.zishuai.cloud/discover/</loc><lastmod>2026-11-12</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zishutronapps.zishuai.cloud/popular-apps/</loc><lastmod>2026-11-12</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zishutronapps.zishuai.cloud/popular-games/</loc><lastmod>2026-11-12</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://zishutronapps.zishuai.cloud/editors-choice/</loc><lastmod>2026-11-12</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
   <url><loc>https://zishutronapps.zishuai.cloud/category/tools/</loc><lastmod>2026-11-12</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
   <url><loc>https://zishutronapps.zishuai.cloud/category/social/</loc><lastmod>2026-09-17</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
   <url><loc>https://zishutronapps.zishuai.cloud/category/games/</loc><lastmod>2026-10-19</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
