@@ -30,7 +30,12 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const env = (k, d = '') => (process.env[k] || d).trim();
 const DB = env('STORE_DB_URL', 'https://stardust-store-default-rtdb.firebaseio.com').replace(/\/+$/, '');
 const BASE = env('SITE_BASE_URL', 'https://zishutronapps.zishuai.cloud').replace(/\/+$/, '');
-const INSIGHT_URL = env('INSIGHT_URL', 'https://zishu-insight.zishuai.cloud').replace(/\/+$/, '');
+const MAIN_URL = env('MAIN_SITE_URL', 'https://zishutron.zishuai.cloud').replace(/\/+$/, '');
+const FOUNDER_PROFILE = `${MAIN_URL}/developer`;
+const SOCIALS = [
+  ['GitHub', 'https://github.com/zishutron'], ['Discord', 'https://discord.gg/Xhh5r2UM5C'], ['X (Twitter)', 'https://x.com/zishanstardust'],
+  ['YouTube', 'https://youtube.com/@zishutron'], ['LinkedIn', 'https://www.linkedin.com/in/zishutron']
+];
 const CONSOLE_URL = env('DEV_CONSOLE_URL', 'https://dev-zishutronapps.zishuai.cloud'); // "For developers" link in the footer
 const SUPPORT_EMAIL = env('SUPPORT_EMAIL', 'support.stardustofficial@gmail.com');
 const APPS_FILE = env('APPS_FILE');       // local test fixture (skips Firebase)
@@ -239,10 +244,12 @@ ${body}
 <footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
-      <div><a class="brand" href="/"><img src="/favicon.png" width="30" height="30" alt=""><span>ZishuTron <b>Apps</b></span></a>
+      <div class="foot-brand"><a class="brand" href="/"><img src="/favicon.png" width="30" height="30" alt=""><span>ZishuTron <b>Apps</b></span></a>
         <p>${esc(TAGLINE)}. Every app is published by its developer and listed with its version, size and requirements.</p></div>
       <div><h3>Explore</h3><a href="/apps/">All apps</a><a href="/top/">Top charts</a><a href="/library/">My library</a><a href="/rss.xml">RSS feed</a></div>
-      <div><h3>Company</h3><a href="${INSIGHT_URL}/">ZishuTron Insight</a><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a><a href="mailto:${esc(SUPPORT_EMAIL)}?subject=Report%20an%20app">Report an app</a>${CONSOLE_URL ? `<a href="${esc(CONSOLE_URL)}">For developers</a>` : ''}</div>
+      <div><h3>Company</h3><a href="${esc(MAIN_URL)}/">ZISHU TRON</a><a href="/about/">About</a><a href="/founder/">About Founder</a><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></div>
+      <div><h3>Support</h3><a href="/support/">Customer support</a>${CONSOLE_URL ? `<a href="${esc(CONSOLE_URL)}">Developer console</a>` : ''}<a href="mailto:${esc(SUPPORT_EMAIL)}?subject=Report%20an%20app">Report an app</a></div>
+      <div><h3>Join us</h3>${SOCIALS.map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join('')}</div>
     </div>
     <p class="copy">© ${new Date().getFullYear()} ZISHU TRON · ${SITE}. App names, logos and trademarks belong to their respective owners.</p>
   </div>
@@ -280,11 +287,7 @@ ${shelf('Popular right now', popular.slice(0, 10), '/top/')}
 ${shelf('New releases', [...apps].sort(byNew).slice(0, 10), '/apps/')}
 ${shelf('Recently updated', [...apps].sort(byUpd).slice(0, 10), '/top/#updated')}
 ${cats.map((c) => shelf(c.name, popular.filter((a) => a.catSlug === c.slug).slice(0, 15), `/category/${c.slug}/`)).join('\n')}
-${apps.length ? '' : '<div class="empty"><h2>No apps yet</h2><p>New apps will appear here soon.</p></div>'}
-<section class="about">
-  <h2>About ${SITE}</h2>
-  <p>${SITE} is a free Android app store built by ZISHU TRON. Browse ${apps.length || 'our'} apps and games, read real user reviews, check the version, size and Android requirements, and download the APK straight from the developer. The whole store is pre-built, so pages open instantly and use very little mobile data.</p>
-</section>`;
+${apps.length ? '' : '<div class="empty"><h2>No apps yet</h2><p>New apps will appear here soon.</p></div>'}`;
   const ld = [{ '@context': 'https://schema.org', '@type': 'WebSite', name: SITE, url: `${BASE}/`, description: SITE_DESC,
     publisher: { '@type': 'Organization', name: 'ZISHU TRON', url: `${BASE}/`, logo: `${BASE}/favicon.png` },
     potentialAction: { '@type': 'SearchAction', target: `${BASE}/search/?q={search_term_string}`, 'query-input': 'required name=search_term_string' } }];
@@ -362,6 +365,48 @@ function librarySubPage({ cats, path, h1, what, inner }) {
 const savedPage = (cats) => librarySubPage({ cats, path: '/library/saved/', h1: 'Saved apps', what: 'apps you saved on this device', inner: '<div class="grid" id="saved"></div>' });
 const historyPage = (cats) => librarySubPage({ cats, path: '/library/history/', h1: 'Download history', what: 'apps you downloaded on this device',
   inner: '<div class="sec-h"><span></span><button class="linkbtn" id="clearHistory" type="button">Clear history</button></div><div class="grid" id="history"></div>' });
+
+
+function infoPage({ cats, path, title, desc, h1, sub, inner }) {
+  const body = `${crumbHtml([['/', 'Home'], [null, h1]])}<article class="doc"><h1 class="page-title">${esc(h1)}${sub ? ` <small>${esc(sub)}</small>` : ''}</h1>${inner}</article>`;
+  return layout({ title, desc, path, body, cats, ld: [crumbLd([['/', 'Home'], [null, h1]])] });
+}
+const aboutPage = (cats) => infoPage({ cats, path: '/about/', title: `About ${SITE} — free Android app store`, h1: `About ${SITE}`, sub: 'a free Android app store by ZISHU TRON',
+  desc: `${SITE} is a free Android app store by ZISHU TRON. Learn how apps are published, how downloads work and who is behind it.`,
+  inner: `<p>${SITE} is a free Android app store built by <a href="${esc(MAIN_URL)}/">ZISHU TRON</a>. Every app and game is published by its developer and listed with its version, size, Android requirements, permissions and user reviews, so you know what you are installing.</p>
+<h2>How it works</h2>
+<ul><li>Developers upload their app in the <a href="${esc(CONSOLE_URL)}">developer console</a>: icon, feature banner, screenshots, description, permissions and the APK link.</li>
+<li>New and updated apps appear on the store within about 10 minutes.</li>
+<li>The whole store is pre-built, so pages open instantly and use very little mobile data.</li>
+<li>Downloads come straight from the developer's own download link.</li></ul>
+<h2>Our promise</h2>
+<p>Free to browse, free to download, no account needed. We show the permissions an app declares and keep reviews open so the community can speak up.</p>
+<h2>Contact</h2>
+<p>Questions, feedback or a problem with an app? Visit <a href="/support/">customer support</a>. Meet the person behind the project on the <a href="/founder/">About Founder</a> page.</p>` });
+
+const supportPage = (cats) => infoPage({ cats, path: '/support/', title: `Customer support — ${SITE}`, h1: 'Customer support', sub: 'we read every message',
+  desc: `Need help with ${SITE}? Contact customer support by email for download problems, app reports and feedback.`,
+  inner: `<div class="card support-card"><p>Email us at</p><p><a class="mail" href="mailto:${esc(SUPPORT_EMAIL)}">${esc(SUPPORT_EMAIL)}</a></p><a class="btn btn-primary" href="mailto:${esc(SUPPORT_EMAIL)}">Send an email</a></div>
+<h2>What to include</h2>
+<ul><li>The app name and version, and a link to its page on ${SITE}.</li><li>Your phone model and Android version.</li><li>A short description of the problem, and a screenshot if you can.</li></ul>
+<h2>Report an app</h2>
+<p>If an app looks unsafe, misleading or broken, email us with the subject “Report an app” and the link to the app page.</p>
+<h2>Are you a developer?</h2>
+<p>Publish and manage your apps in the <a href="${esc(CONSOLE_URL)}">developer console</a>. For help with it, use the same email address.</p>
+<p class="muted">See also: <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of service</a></p>` });
+
+const founderPage = (cats) => infoPage({ cats, path: '/founder/', title: `About the Founder — Zishan, ZISHU TRON | ${SITE}`, h1: 'About Founder',
+  desc: `Meet Zishan, the founder and developer behind ZISHU TRON and ${SITE}. Student, Android and web developer building useful technology products.`,
+  inner: `<div class="card founder"><div class="avatar" aria-hidden="true">Z</div><div><h2>Zishan</h2><p class="muted">Founder &amp; Developer, ZISHU TRON</p></div></div>
+<p>I'm Zishan, the founder and developer behind ZISHU TRON. I'm a student, and I spend most of my time learning, experimenting and building software. ZISHU TRON is the result of that habit: my long-term effort to create useful technology products, from AI-powered tools to web applications.</p>
+<h2>What I work on</h2>
+<div class="chips">${['Android applications', 'Web applications', 'AI-powered tools', 'Developer tools', 'Digital products', 'User-focused software'].map((x) => `<span class="chip">${x}</span>`).join('')}</div>
+<h2>Skills</h2>
+<div class="chips">${['Java / Android', 'HTML / CSS / JavaScript', 'Firebase', 'AI integration', 'Product design', 'UI / UX', 'Software development'].map((x) => `<span class="chip">${x}</span>`).join('')}</div>
+<h2 id="join">Join us</h2>
+<p>Follow the journey, report bugs, suggest features or just say hello.</p>
+<div class="social-grid">${SOCIALS.map(([n, u]) => `<a class="card social" href="${esc(u)}" target="_blank" rel="noopener"><b>${esc(n)}</b><small>${esc(u.replace(/^https?:\/\/(www\.)?/, ''))}</small></a>`).join('')}</div>
+<p><a class="btn btn-ghost" href="${esc(FOUNDER_PROFILE)}" target="_blank" rel="noopener">View full profile on ZISHU TRON</a></p>` });
 
 function appPage(a, apps, cats) {
   const cat = cats.find((c) => c.slug === a.catSlug);
@@ -450,6 +495,7 @@ function sitemap(apps, cats) {
   const last = apps.reduce((m, a) => Math.max(m, a.updatedTs), 0);
   const urls = [
     { loc: '/', lm: last, p: '1.0', f: 'daily' }, { loc: '/apps/', lm: last, p: '0.9', f: 'daily' }, { loc: '/top/', lm: last, p: '0.8', f: 'daily' },
+    { loc: '/about/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/support/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/founder/', lm: 0, p: '0.4', f: 'monthly' },
     ...cats.map((c) => ({ loc: `/category/${c.slug}/`, lm: c.last, p: '0.7', f: 'daily' })),
     ...apps.map((a) => ({ loc: a.path, lm: a.updatedTs, p: '0.8', f: 'weekly' }))
   ];
@@ -519,7 +565,7 @@ async function main() {
 
   if (!same) {
     // clean previously generated folders, then rebuild every listing page
-    for (const d of ['apps', 'category', 'top', 'search', 'library']) await rm(join(ROOT, d), { recursive: true, force: true });
+    for (const d of ['apps', 'category', 'top', 'search', 'library', 'about', 'support', 'founder']) await rm(join(ROOT, d), { recursive: true, force: true });
     await write('index.html', homePage(listApps, cats));
     await write('apps/index.html', listPage({
       title: `All Android Apps & Games — Free APK Download | ${SITE}`, h1: 'All apps', path: '/apps/', apps: [...listApps].sort(byDl), cats, page: 'apps',
@@ -538,6 +584,9 @@ async function main() {
     await write('library/index.html', libraryPage(cats));
     await write('library/saved/index.html', savedPage(cats));
     await write('library/history/index.html', historyPage(cats));
+    await write('about/index.html', aboutPage(cats));
+    await write('support/index.html', supportPage(cats));
+    await write('founder/index.html', founderPage(cats));
     await write('404.html', notFound(cats));
     await write('sitemap.xml', sitemap(listApps, cats));
     await write('rss.xml', rss(listApps));
