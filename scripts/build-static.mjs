@@ -29,9 +29,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // ---------------------------------------------------------------- config
 const env = (k, d = '') => (process.env[k] || d).trim();
 const DB = env('STORE_DB_URL', 'https://stardust-store-default-rtdb.firebaseio.com').replace(/\/+$/, '');
-const BASE = env('SITE_BASE_URL', 'https://stardustapkstore.zishuai.cloud').replace(/\/+$/, '');
+const BASE = env('SITE_BASE_URL', 'https://zishutronapps.zishuai.cloud').replace(/\/+$/, '');
 const INSIGHT_URL = env('INSIGHT_URL', 'https://zishu-insight.zishuai.cloud').replace(/\/+$/, '');
-const CONSOLE_URL = env('DEV_CONSOLE_URL'); // optional: shows a "For developers" link
+const CONSOLE_URL = env('DEV_CONSOLE_URL', 'https://dev-zishutronapps.zishuai.cloud'); // "For developers" link in the footer
 const SUPPORT_EMAIL = env('SUPPORT_EMAIL', 'support.stardustofficial@gmail.com');
 const APPS_FILE = env('APPS_FILE');       // local test fixture (skips Firebase)
 const REVIEWS_FILE = env('REVIEWS_FILE'); // local test fixture
@@ -264,7 +264,9 @@ const byRate = (a, b) => b.rating - a.rating || b.rc - a.rc;
 
 function homePage(apps, cats) {
   const popular = [...apps].sort(byDl);
-  const heroPool = [...popular.filter((a) => a.banner), ...popular.filter((a) => !a.banner)].slice(0, 5);
+  // hero slides use the developer's "Feature Banner" as background; only apps that have one are featured
+  const withBanner = popular.filter((a) => a.banner);
+  const heroPool = (withBanner.length ? withBanner : popular).slice(0, 5);
   const hero = heroPool.length ? `<section class="hero" aria-label="Featured apps">${heroPool.map((a, i) => `
     <a class="hero-slide" href="${a.path}">${a.banner ? `<img class="hero-bg" src="${esc(a.banner)}" alt="" ${i ? 'loading="lazy"' : 'fetchpriority="high"'} decoding="async">` : ''}
       <span class="hero-body"><img class="ic" src="${esc(a.icon)}" width="72" height="72" alt="">
@@ -272,7 +274,7 @@ function homePage(apps, cats) {
   const catTiles = cats.length ? `<section class="sec"><div class="sec-h"><h2>Browse categories</h2></div><div class="cat-grid">${cats.map((c) =>
     `<a class="cat-tile" href="/category/${c.slug}/"><span class="ce">${c.icon}</span><span>${esc(c.name)}<small>${c.count} ${c.count === 1 ? 'app' : 'apps'}</small></span></a>`).join('')}</div></section>` : '';
   const body = `
-<h1 class="page-title">${SITE} <small>${esc(TAGLINE)}</small></h1>
+<h1 class="sr-only">${SITE} — ${esc(TAGLINE)}</h1>
 ${hero}
 ${shelf('Popular right now', popular.slice(0, 10), '/top/')}
 ${shelf('New releases', [...apps].sort(byNew).slice(0, 10), '/apps/')}
@@ -327,15 +329,39 @@ function searchPage(apps, cats) {
   return layout({ title: `Search apps — ${SITE}`, desc: 'Search every app and game on ZishuTron Apps.', path: '/search/', body, page: 'search', cats, noindex: true });
 }
 
+const pencil = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 function libraryPage(cats) {
-  const body = `<h1 class="page-title">My library <small>saved on this device only</small></h1>
-<section class="sec"><div class="sec-h"><h2>Your profile</h2></div>
-  <form class="card form" id="profileForm"><label>Display name<input name="name" maxlength="40" placeholder="Guest User"></label><label>Handle<input name="handle" maxlength="40" placeholder="@guest"></label><button class="btn btn-primary" type="submit">Save</button><span class="muted" id="profileMsg" role="status"></span></form>
-  <p class="muted">Used when you post a review. Nothing is uploaded until you post.</p></section>
-<section class="sec"><div class="sec-h"><h2>Saved apps</h2></div><div class="grid" id="saved"></div></section>
-<section class="sec"><div class="sec-h"><h2>Download history</h2><button class="linkbtn" id="clearHistory" type="button">Clear</button></div><div class="grid" id="history"></div></section>`;
-  return layout({ title: `My library — ${SITE}`, desc: 'Your saved apps and download history on ZishuTron Apps.', path: '/library/', body, page: 'library', cats, noindex: true });
+  const body = `<h1 class="sr-only">My library</h1>
+<section class="card profile" id="profileCard" aria-label="Your profile">
+  <div class="pf-view">
+    <div class="pf-top"><div class="avatar" id="pfAvatar" aria-hidden="true">G</div>
+      <div class="pf-info"><h2 id="pfName">Guest User</h2><p class="pf-handle" id="pfHandle">@guest</p></div>
+      <button class="icon-btn" id="pfEdit" type="button" aria-label="Edit profile">${pencil}</button></div>
+    <p class="pf-bio" id="pfBio"></p>
+    <div class="pf-actions">
+      <a class="btn btn-ghost" href="/library/saved/">${svg.heart}<span>Saved apps</span><small id="savedCount"></small></a>
+      <a class="btn btn-ghost" href="/library/history/">${svg.download}<span>Download history</span><small id="historyCount"></small></a>
+    </div>
+    <p class="pf-legal"><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></p>
+  </div>
+  <form class="pf-edit form" id="pfForm" hidden>
+    <h3>Edit profile</h3>
+    <label>Name<input name="name" maxlength="40" placeholder="Guest User" autocomplete="name"></label>
+    <label>Username<input name="handle" maxlength="30" placeholder="guest" autocapitalize="none" autocomplete="username"></label>
+    <label>Bio<textarea name="bio" rows="3" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
+    <div class="form-row"><button class="btn btn-primary" type="submit">Save</button><button class="btn" id="pfCancel" type="button">Cancel</button></div>
+  </form>
+</section>
+<p class="muted center">Your profile and library are stored on this device only.</p>`;
+  return layout({ title: `My library — ${SITE}`, desc: 'Your profile, saved apps and download history on ZishuTron Apps.', path: '/library/', body, page: 'library', cats, noindex: true });
 }
+function librarySubPage({ cats, path, h1, what, inner }) {
+  const body = `${crumbHtml([['/library/', 'Library'], [null, h1]])}<h1 class="page-title">${h1} <small>${what}</small></h1>${inner}`;
+  return layout({ title: `${h1} — ${SITE}`, desc: `${h1} on ZishuTron Apps.`, path, body, page: 'library', cats, noindex: true });
+}
+const savedPage = (cats) => librarySubPage({ cats, path: '/library/saved/', h1: 'Saved apps', what: 'apps you saved on this device', inner: '<div class="grid" id="saved"></div>' });
+const historyPage = (cats) => librarySubPage({ cats, path: '/library/history/', h1: 'Download history', what: 'apps you downloaded on this device',
+  inner: '<div class="sec-h"><span></span><button class="linkbtn" id="clearHistory" type="button">Clear history</button></div><div class="grid" id="history"></div>' });
 
 function appPage(a, apps, cats) {
   const cat = cats.find((c) => c.slug === a.catSlug);
@@ -384,7 +410,9 @@ function appPage(a, apps, cats) {
   ${a.whatsNew.length ? `<section class="sec"><h2>What’s new in ${esc(a.version)}</h2><ul class="wn">${a.whatsNew.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>` : ''}
   <section class="sec"><h2>App information</h2><dl class="info">${info}</dl></section>
   ${a.history.length > 1 ? `<section class="sec"><h2>Version history</h2><div class="chips">${[...a.history].reverse().map((v) => `<span class="chip">${esc(v)}</span>`).join('')}</div></section>` : ''}
-  ${a.permissions.length ? `<section class="sec"><h2>Permissions</h2><div class="chips">${a.permissions.map((p) => `<span class="chip">${esc(p)}</span>`).join('')}</div></section>` : ''}
+  <section class="sec" id="permissions"><h2>App permissions</h2>${a.permissions.length
+    ? `<p class="muted">Declared by the developer. This app may ask for access to:</p><ul class="perms">${a.permissions.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
+    : '<p class="muted">The developer has not listed any permissions for this app.</p>'}</section>
   <section class="sec"><h2>Security</h2><div class="card secure">${svg.shield}<div><b>Direct from the developer</b><p>The APK is hosted by the developer and opens from its official download link. Always install apps from sources you trust.</p>${a.sha256 ? `<p class="hash">SHA-256: <code>${esc(a.sha256)}</code></p>` : ''}</div></div></section>
   <section class="sec" id="reviews"><h2>Ratings &amp; reviews</h2>
     <div class="rev-sum"><div class="big"><b>${a.rc > 0 ? a.rating.toFixed(1) : '–'}</b><span class="stars">${stars(Math.round(a.rc > 0 ? a.rating : 0))}</span><small>${a.rc} ${a.rc === 1 ? 'review' : 'reviews'}</small></div>
@@ -398,7 +426,7 @@ function appPage(a, apps, cats) {
   ${shelf('You may also like', more)}
 </article>
 <div class="stickybar" id="stickyBar" hidden><img src="${esc(a.icon)}" width="40" height="40" alt=""><span><b>${esc(a.name)}</b><small>${esc(a.version)}${a.size ? ` · ${esc(a.size)}` : ''}</small></span>${a.downloadUrl ? `<a class="btn btn-primary" href="${esc(a.downloadUrl)}" target="_blank" rel="noopener nofollow" data-download data-id="${esc(a.id)}">Download</a>` : ''}</div>
-<div class="lightbox" id="lightbox" hidden><img alt=""></div>`;
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview"><button class="lb-close" type="button" aria-label="Close preview">×</button><img alt=""></div>`;
 
   const ld = [{
     '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: a.name, operatingSystem: `Android ${a.minAndroid}+`,
@@ -508,6 +536,8 @@ async function main() {
     await write('top/index.html', topPage(listApps, cats));
     await write('search/index.html', searchPage(listApps, cats));
     await write('library/index.html', libraryPage(cats));
+    await write('library/saved/index.html', savedPage(cats));
+    await write('library/history/index.html', historyPage(cats));
     await write('404.html', notFound(cats));
     await write('sitemap.xml', sitemap(listApps, cats));
     await write('rss.xml', rss(listApps));
