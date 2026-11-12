@@ -1,42 +1,60 @@
-# ✦ Stardust Store
+# ZishuTron Apps
 
-**Stardust Store** is a fully functional, modern web-based app store built with HTML, CSS, and JavaScript. It features real-time Firebase integration, user profiles, app discovery, search, rankings, reviews, and a sleek dark/light mode.
+**ZishuTron Apps** (formerly Stardust Store) is a free Android app store by ZISHU TRON.
+Every page is **pre-built static HTML** — visitors never wait for a database, and the store uses very little mobile data.
 
----
+## How it works
 
-## ⚠️ Important Notice
+```
+Developer Console ──publish──▶ Firebase ──every 10 min──▶ GitHub Action ──▶ static pages ──▶ GitHub Pages
+```
 
-**This project is proprietary and confidential.**
+1. A developer publishes or updates an app in the **ZishuTron Apps Console**.
+2. The `Publish ZishuTron Apps` workflow runs every 10 minutes (and on every push) and runs `scripts/build-static.mjs`.
+3. The script reads all live apps and reviews from Firebase and generates the whole site.
+4. The workflow commits the result and deploys it. If nothing changed, nothing is deployed.
 
-- You are **NOT ALLOWED** to:
-  - Remove, modify, or hide the original author's credit.
-  - Use this code for commercial purposes (selling, monetizing, or earning money).
-  - Claim this code as your own work.
-  - Redistribute or resell this code in any form.
+Firebase is only used by the visitor's browser for two tiny calls: the **download counter** and **posting a review** (plain REST, no SDK).
 
-- You **MAY**:
-  - Use this code for personal, non-commercial projects.
-  - Modify the code for your own personal use.
-  - Learn from the code and improve your skills.
+## Generated files (do not edit by hand)
 
-**Violation of these terms will result in legal action.**
+| Path | What |
+| --- | --- |
+| `index.html` | Home: featured, categories, shelves, all apps |
+| `apps/` , `apps/<slug>/` | All apps + one SEO page per app |
+| `category/<slug>/` | One page per category |
+| `top/` | Top charts |
+| `search/`, `library/` | Client-side pages (use `apps-index.json`) |
+| `apps-index.json`, `sitemap.xml`, `rss.xml`, `robots.txt`, `manifest.webmanifest`, `404.html` | Search index, SEO, feeds, PWA |
 
----
+Hand-written files: `assets/style.css`, `assets/app.js`, `scripts/build-static.mjs`, `privacy.html`, `terms.html`, `favicon.png`.
 
-## ✨ Features
+## Setup (once)
 
-- **🏠 Home Feed** – Browse apps with category filters, banners, and horizontal sections (Editor's Choice, Trending, New Releases, Popular Games & Apps).
-- **🔍 Search** – Search apps by name, developer, or category with voice input support.
-- **📊 Rankings** – View Top Free, Top Paid, Top Grossing, Trending, and Top Rated apps.
-- **👤 User Profile** – Customize profile picture, name, handle, and bio. View download history and review logs.
-- **📱 App Details** – Screenshots, descriptions, version history, permissions, virus scan, related apps, and real-time reviews.
-- **⭐ Reviews & Ratings** – Post reviews with star ratings and attach screenshots. Real-time updates.
-- **❤️ Wishlist** – Save your favorite apps.
-- **📥 Download Tracking** – Real-time download count updates.
-- **🌓 Dark / Light Mode** – Toggle between themes (remembers preference).
-- **📄 Legal Pages** – Privacy Policy and Terms of Service links in profile section.
-- **🚀 Professional Loading Screen** – Animated loader with tips and progress bar.
+1. **Settings → Pages → Source: GitHub Actions.**
+2. **Settings → Actions → General → Workflow permissions: Read and write.**
+3. Optional repository **variables** (Settings → Secrets and variables → Actions → Variables):
+   - `SITE_BASE_URL` — your public URL, no trailing slash (default `https://stardustapkstore.zishuai.cloud`)
+   - `DEV_CONSOLE_URL` — shows a "For developers" link in the footer
+4. **Actions → Publish ZishuTron Apps → Run workflow** for the first build.
 
----
+No secrets are required. The Firebase database must allow public **read** on `apps` and `reviews`, and **write** on `apps/*/downloadCount`, `apps/*/reviewCount`, `apps/*/rating` and `reviews/*` (the same as the old store).
 
+## Local build
 
+```bash
+npm run build          # needs network access to Firebase
+npm run serve          # preview
+```
+
+Test without Firebase: `APPS_FILE=apps.json REVIEWS_FILE=reviews.json node scripts/build-static.mjs`
+
+## Notes
+
+- Old links like `/?appuid=<id>` are redirected to the new `/apps/<slug>/` pages.
+- If Firebase returns zero apps while the site has apps, the build fails on purpose instead of publishing an empty store (`ALLOW_EMPTY=1` overrides).
+- Fields such as the developer UID and support e-mail are never written into the public pages.
+
+## License
+
+Proprietary. See [LICENSE](LICENSE). © ZISHU TRON.

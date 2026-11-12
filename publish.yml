@@ -1,0 +1,70 @@
+name: Publish ZishuTron Apps
+
+on:
+  workflow_dispatch:
+  schedule:
+    # every 10 minutes: pick up new / updated apps from the developer console
+    - cron: '*/10 * * * *'
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - 'assets/**'
+      - 'package.json'
+      - '.github/workflows/publish.yml'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build static store from Firebase
+        env:
+          SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+          DEV_CONSOLE_URL: ${{ vars.DEV_CONSOLE_URL }}
+        run: node scripts/build-static.mjs
+
+      - name: Commit generated files
+        id: commit
+        run: |
+          git config user.name "zishu-bot"
+          git config user.email "bot@zishutron.invalid"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes."
+          else
+            git commit -m "chore: rebuild static store [skip ci]"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only deploy when something changed (or when run by hand / by a push)
+      - name: Setup Pages
+        if: steps.commit.outputs.changed == 'true' || github.event_name != 'schedule'
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        if: steps.commit.outputs.changed == 'true' || github.event_name != 'schedule'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deploy
+        if: steps.commit.outputs.changed == 'true' || github.event_name != 'schedule'
+        uses: actions/deploy-pages@v4
