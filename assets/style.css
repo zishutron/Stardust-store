@@ -51,11 +51,14 @@ svg.mi{width:12px;height:12px;display:inline;vertical-align:-1px;stroke-width:2.
 .suggest img{width:36px;height:36px;border-radius:9px;object-fit:cover}
 .suggest small{display:block;color:var(--muted)}
 .catbar{border-top:1px solid var(--line)}
-.cat-in{display:flex;gap:6px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:none}
+.cat-in{display:flex;gap:8px;overflow-x:auto;padding-top:9px;padding-bottom:9px;scrollbar-width:none}
 .cat-in::-webkit-scrollbar{display:none}
-.cat-in a{flex:0 0 auto;padding:5px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);background:var(--soft)}
-.cat-in a:hover{text-decoration:none;color:var(--text)}
-.cat-in a.on{background:var(--brand);color:var(--brand-ink)}
+.cat-in a{flex:0 0 auto;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:600;color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent);border:1px solid color-mix(in srgb,var(--brand) 35%,transparent)}
+.cat-in a:hover{text-decoration:none;background:color-mix(in srgb,var(--brand) 20%,transparent)}
+.cat-in a.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+/* Play-Store style: on the home page the pills stay hidden until the visitor has scrolled past a few rails */
+.catbar.reveal{position:absolute;left:0;right:0;top:100%;background:var(--card);opacity:0;transform:translateY(-10px);pointer-events:none;visibility:hidden;transition:opacity .2s,transform .2s,visibility .2s;box-shadow:0 8px 16px rgba(15,23,42,.08)}
+.catbar.reveal.show{opacity:1;transform:none;pointer-events:auto;visibility:visible}
 
 main{overflow-x:clip;padding-top:24px;padding-bottom:56px;min-height:60vh}
 .page-title{font-size:clamp(22px,4vw,30px);letter-spacing:-.5px;margin-bottom:14px}
@@ -242,3 +245,8 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
   .info div{flex-direction:column;gap:0}.info dd{text-align:left}
 }
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* long description: collapsed by default, "Show more" expands */
+.clamp{max-height:9.6em;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
+.clamp.open{max-height:none;-webkit-mask-image:none;mask-image:none}
+.more{margin:-4px 0 8px;padding:6px 0}

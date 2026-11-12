@@ -31,6 +31,15 @@
     try { localStorage.setItem('zt_theme', next); } catch (e) { /* ignore */ }
   });
 
+  /* ---------- home: category pills appear only after scrolling a few rails ---------- */
+  var cb = $('.catbar.reveal');
+  if (cb) {
+    var shown = false, ticking = false;
+    var check = function () { ticking = false; var s = window.scrollY > 650; if (s !== shown) { shown = s; cb.classList.toggle('show', s); } };
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(check); } }, { passive: true });
+    check();
+  }
+
   /* ---------- apps index (loaded lazily, only when needed) ---------- */
   var indexPromise;
   function loadIndex() {
@@ -129,6 +138,18 @@
   var app = $('.app');
   if (!app) return;
   var id = app.dataset.appId;
+
+  // long description: collapse with "Show more"
+  var desc = $('#desc'), more = $('#descMore');
+  if (desc && more) {
+    if (desc.scrollHeight > desc.clientHeight + 6) {
+      more.hidden = false;
+      more.addEventListener('click', function () {
+        var open = desc.classList.toggle('open');
+        more.textContent = open ? 'Show less' : 'Show more'; more.setAttribute('aria-expanded', open);
+      });
+    } else desc.classList.remove('clamp');
+  }
 
   // lightbox
   var lb = $('#lightbox');
