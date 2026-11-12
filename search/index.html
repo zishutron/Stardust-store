@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Search apps — ZishuTron Apps</title>
+<meta name="description" content="Search every app and game on ZishuTron Apps.">
+<link rel="canonical" href="https://stardustapkstore.zishuai.cloud/search/">
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="alternate" type="application/rss+xml" title="ZishuTron Apps — new &amp; updated apps" href="https://stardustapkstore.zishuai.cloud/rss.xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ZishuTron Apps">
+<meta property="og:title" content="Search apps — ZishuTron Apps">
+<meta property="og:description" content="Search every app and game on ZishuTron Apps.">
+<meta property="og:url" content="https://stardustapkstore.zishuai.cloud/search/">
+<meta property="og:image" content="https://stardustapkstore.zishuai.cloud/favicon.png">
+<meta name="twitter:card" content="summary">
+<script>try{var t=localStorage.getItem('zt_theme')||localStorage.getItem('stardust_theme');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}window.ZT={db:"https://stardust-store-default-rtdb.firebaseio.com"};</script>
+<link rel="stylesheet" href="/assets/style.css?v=e1b5f954">
+
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap hdr-in">
+    <a class="brand" href="/" aria-label="ZishuTron Apps home"><img src="/favicon.png" width="34" height="34" alt=""><span>ZishuTron <b>Apps</b></span></a>
+    <nav class="nav" aria-label="Main"><a href="/">Home</a><a href="/apps/">Apps</a><a href="/top/">Top charts</a><a href="/library/">Library</a></nav>
+    <form class="search" role="search" action="/search/" method="get">
+      <input type="search" name="q" placeholder="Search apps, games, developers…" autocomplete="off" aria-label="Search apps" enterkeyhint="search">
+      <button type="submit" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <div class="suggest" hidden></div>
+    </form>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+  <div class="catbar"><div class="wrap cat-in"><a href="/apps/">All</a><a href="/category/tools/">Tools</a><a href="/category/social/">Social</a><a href="/category/games/">Games</a><a href="/category/ai/">AI</a><a href="/category/education/">Education</a><a href="/category/entertainment/">Entertainment</a><a href="/category/finance/">Finance</a></div></div>
+</header>
+<main id="main" class="wrap">
+<h1 class="page-title">Search</h1>
+<form class="bigsearch" role="search" action="/search/" method="get"><input id="q" type="search" name="q" placeholder="Search apps, games, developers…" autocomplete="off" autofocus aria-label="Search apps"><button type="button" id="voice" aria-label="Voice search"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></form>
+<div class="chips" id="filters"><button class="chip on" data-f="all" type="button">All</button><button class="chip" data-f="name" type="button">Name</button><button class="chip" data-f="dev" type="button">Developer</button><button class="chip" data-f="cat" type="button">Category</button></div>
+<p class="muted" id="count" aria-live="polite"></p>
+<div class="grid" id="results"></div>
+<div id="fallback"><section class="sec"><div class="sec-h"><h2>Popular apps</h2></div><div class="grid"><a class="row" href="/apps/stardust-hub/" data-n="stardust hub" data-d="91" data-r="0" data-t="1785645087219" data-u="1788912000000"><img class="ic" src="https://i.ibb.co/XvV0ZyP/1000404042.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Stardust Hub</span><span class="ds">A new social media where you will enjoy a lot</span><span class="st"><span class="new">New</span> · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 91 · 40 MB</span></span></a><a class="row" href="/apps/stardust-store/" data-n="stardust store" data-d="32" data-r="4.5" data-t="1785598627745" data-u="1789603200000"><img class="ic" src="https://i.ibb.co/pvrz8LDC/1000403937.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Stardust Store</span><span class="ds">A new and modern app store where you can find all kinds of apps</span><span class="st"><span class="star">★</span> 4.5 · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 32 · 2 MB</span></span></a><a class="row" href="/apps/zishu-ai-voice-assistant/" data-n="zishu ai: voice assistant" data-d="28" data-r="4.5" data-t="1789461903647" data-u="1792108800000"><img class="ic" src="https://i.ibb.co/20kRMGqS/zishu-launcher.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Zishu AI: Voice Assistant</span><span class="ds">Zishu — Your voice-first AI assistant. Talk in Hindi or English, get…</span><span class="st"><span class="star">★</span> 4.5 · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 28 · 1.33 MB</span></span></a><a class="row" href="/apps/zishu-deep-ai/" data-n="zishu deep ai" data-d="13" data-r="0" data-t="1791031667194" data-u="1792195200000"><img class="ic" src="https://i.ibb.co/7dWY18rX/zishu-launcher.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Zishu Deep AI</span><span class="ds">Zishu Deep AI v5.0.0 — The Ultimate Native AI Workspace Experience li…</span><span class="st"><span class="new">New</span> · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 13 · 183 kb</span></span></a><a class="row" href="/apps/zishu-terminal/" data-n="zishu terminal" data-d="13" data-r="0" data-t="1790232302760" data-u="1792713600000"><img class="ic" src="https://i.ibb.co/Z6mWFcJd/terminal-launcher.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Zishu Terminal</span><span class="ds">Android terminal with real bash, Python, Git, Node.js, C/C++ and pkg…</span><span class="st"><span class="new">New</span> · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 13 · 1.13 MB</span></span></a><a class="row" href="/apps/stardust-x-messenger/" data-n="stardust x messenger" data-d="12" data-r="0" data-t="1784293646571" data-u="1788825600000"><img class="ic" src="https://i.ibb.co/nqZDJ27j/file-00000000d14c8211979120605a667014.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Stardust X messenger</span><span class="ds">A great new messaging app with a lot of features. The app has a compl…</span><span class="st"><span class="new">New</span> · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 12 · 33 MB</span></span></a><a class="row" href="/apps/ring-for-me-love-alarm/" data-n="ring for me · love alarm" data-d="10" data-r="0" data-t="1786206611209" data-u="1788825600000"><img class="ic" src="https://i.ibb.co/8L00qCQm/4144732-ico.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Ring For Me · Love Alarm</span><span class="ds">Connect with the right people nearby. When someone special is close,…</span><span class="st"><span class="new">New</span> · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 10 · 33 MB</span></span></a><a class="row" href="/apps/stardust-learning/" data-n="stardust learning" data-d="9" data-r="4.5" data-t="1785286360406" data-u="1785283200000"><img class="ic" src="https://i.ibb.co/4g7styTL/1000402196.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Stardust Learning</span><span class="ds">Master programming languages &amp; coding skills effortlessly with Stardu…</span><span class="st"><span class="star">★</span> 4.5 · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 9 · 39 MB</span></span></a><a class="row" href="/apps/stardust-trader/" data-n="stardust trader" data-d="9" data-r="4.5" data-t="1784437000374" data-u="1789257600000"><img class="ic" src="https://i.ibb.co/zhRbR8RL/file-000000001b248246a06fc74f9abc6b6a-removebg-preview.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Stardust trader</span><span class="ds">Stardust Trader is a professional paper trading simulator designed fo…</span><span class="st"><span class="star">★</span> 4.5 · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 9 · 48 MB</span></span></a><a class="row" href="/apps/zshoot/" data-n="zshoot" data-d="8" data-r="0" data-t="1791625520028" data-u="1792368000000"><img class="ic" src="https://i.ibb.co/FL0CPHPt/zshoot-launcher.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">ZShoot</span><span class="ds">Aim, shoot and survive. Climb 9 ranks, 100 levels and rule the leader…</span><span class="st"><span class="new">New</span> · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 8 · 23.2 MB</span></span></a><a class="row" href="/apps/zishu-browser/" data-n="zishu browser" data-d="8" data-r="0" data-t="1789824735412" data-u="1789862400000"><img class="ic" src="https://i.ibb.co/SXQvJZMD/file-000000007fd082118cea1314df6aa1ae-removebg-preview.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Zishu Browser</span><span class="ds">Fast, private, lightweight Android browser. Just 242 KB.</span><span class="st"><span class="new">New</span> · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 8 · 242 kb</span></span></a><a class="row" href="/apps/roller-splash-pro/" data-n="roller splash pro" data-d="6" data-r="4.5" data-t="1784303826803" data-u="1790035200000"><img class="ic" src="https://i.ibb.co/r2y5YXVp/1000653611.png" width="64" height="64" loading="lazy" decoding="async" alt=""><span class="meta"><span class="nm">Roller splash pro</span><span class="ds">A puzzle game where you have to color an area with a ball</span><span class="st"><span class="star">★</span> 4.5 · <svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> 6 · 5 MB</span></span></a></div></section></div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div><a class="brand" href="/"><img src="/favicon.png" width="30" height="30" alt=""><span>ZishuTron <b>Apps</b></span></a>
+        <p>Free Android apps &amp; games, safe APK downloads. Every app is published by its developer and listed with its version, size and requirements.</p></div>
+      <div><h3>Explore</h3><a href="/apps/">All apps</a><a href="/top/">Top charts</a><a href="/library/">My library</a><a href="/rss.xml">RSS feed</a></div>
+      <div><h3>Company</h3><a href="https://zishu-insight.zishuai.cloud/">ZishuTron Insight</a><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a><a href="mailto:support.stardustofficial@gmail.com?subject=Report%20an%20app">Report an app</a></div>
+    </div>
+    <p class="copy">© 2026 ZISHU TRON · ZishuTron Apps. App names, logos and trademarks belong to their respective owners.</p>
+  </div>
+</footer>
+<nav class="bottom-nav" aria-label="Primary">
+  <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10"/></svg><span>Home</span></a><a href="/search/" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span></a><a href="/top/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></svg><span>Top</span></a><a href="/library/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg><span>Library</span></a>
+</nav>
+<script src="/assets/app.js?v=e1b5f954" defer></script>
+</body>
+</html>

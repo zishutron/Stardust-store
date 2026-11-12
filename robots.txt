@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /search/
+Disallow: /library/
+
+Sitemap: https://stardustapkstore.zishuai.cloud/sitemap.xml
