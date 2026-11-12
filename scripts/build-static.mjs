@@ -143,10 +143,11 @@ function normalize(apps, reviewsAll) {
     });
   }
 
-  // stable slugs: oldest app keeps the plain slug, later duplicates get a short id suffix
+  // stable slugs (package name): oldest app keeps the plain slug, later duplicates get a short id suffix
   const used = new Set();
   for (const a of [...out].sort((x, y) => x.ts - y.ts || x.id.localeCompare(y.id))) {
-    let s = slugify(a.name) || 'app';
+    const pk = a.pkg.toLowerCase().replace(/[^a-z0-9._-]/g, '').replace(/^[._-]+|[._-]+$/g, '');
+    let s = pk.length >= 3 ? pk : (slugify(a.name) || 'app'); // URL = package name, e.g. /apps/com.zishu.os/
     if (used.has(s)) s = `${s}-${slugify(a.id).slice(-5) || sha(a.id).slice(0, 5)}`;
     used.add(s); a.slug = s; a.path = `/apps/${s}/`;
   }
@@ -176,10 +177,11 @@ function row(a, extra = '') {
     + `<span class="meta"><span class="nm">${esc(a.name)}</span><span class="ds">${esc(trunc(a.short || a.catRaw, 70))}</span><span class="st">${statLine(a)}</span></span></a>`;
 }
 function tile(a) {
-  return `<a class="tile" href="${a.path}"><img class="ic" src="${esc(a.icon)}" width="72" height="72" loading="lazy" decoding="async" alt="">`
+  return `<a class="tile" href="${a.path}" ${sortAttrs(a)}><img class="ic" src="${esc(a.icon)}" width="72" height="72" loading="lazy" decoding="async" alt="">`
     + `<span class="nm">${esc(a.name)}</span><span class="st">${a.rc > 0 ? `<span class="star">★</span> ${a.rating.toFixed(1)}` : esc(a.catRaw)}</span></a>`;
 }
 const shelf = (title, apps, more) => apps.length ? `<section class="sec"><div class="sec-h"><h2>${esc(title)}</h2>${more ? `<a href="${more}">See all</a>` : ''}</div><div class="shelf">${apps.map(tile).join('')}</div></section>` : '';
+const tilesSection = (title, apps, more) => apps.length ? `<section class="sec"><div class="sec-h"><h2>${esc(title)}</h2>${more ? `<a href="${more}">See all</a>` : ''}</div><div class="tiles">${apps.map(tile).join('')}</div></section>` : '';
 const rowsSection = (title, apps, more) => apps.length ? `<section class="sec"><div class="sec-h"><h2>${esc(title)}</h2>${more ? `<a href="${more}">See all</a>` : ''}</div><div class="grid">${apps.map((a) => row(a)).join('')}</div></section>` : '';
 
 const sortBar = (target) => `<label class="sortbar">Sort by <select data-sort="${target}" aria-label="Sort apps"><option value="d">Most downloaded</option><option value="r">Top rated</option><option value="t">Newest</option><option value="u">Recently updated</option><option value="n">Name A–Z</option></select></label>`;
@@ -188,7 +190,7 @@ function layout({ title, desc, path, body, ld = [], image, noindex = false, ogTy
   const canonical = `${BASE}${path}`;
   const img = image || `${BASE}/favicon.png`;
   const nav = (href, label, key) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${label}</a>`;
-  const catbar = [`<a href="/apps/"${page === 'apps' ? ' class="on"' : ''}>All</a>`,
+  const catbar = [`<a href="/apps/"${page === 'apps' && !activeCat ? ' class="on"' : ''}>All</a>`,
     ...cats.map((c) => `<a href="/category/${c.slug}/"${activeCat === c.slug ? ' class="on"' : ''}>${esc(c.name)}</a>`)].join('');
   const bn = (href, label, key, icon) => `<a href="${href}"${page === key ? ' aria-current="page"' : ''}>${icon}<span>${label}</span></a>`;
   return `<!DOCTYPE html>
@@ -223,7 +225,7 @@ ${head}${ld.map(jsonLd).join('\n')}
     <a class="brand" href="/" aria-label="${SITE} home"><img src="/favicon.png" width="34" height="34" alt=""><span>ZishuTron <b>Apps</b></span></a>
     <nav class="nav" aria-label="Main">${nav('/', 'Home', 'home')}${nav('/apps/', 'Apps', 'apps')}${nav('/top/', 'Top charts', 'top')}${nav('/library/', 'Library', 'library')}</nav>
     <form class="search" role="search" action="/search/" method="get">
-      <input type="search" name="q" placeholder="Search apps, games, developers…" autocomplete="off" aria-label="Search apps" enterkeyhint="search">
+      <input type="search" name="q" placeholder="Search apps…" autocomplete="off" aria-label="Search apps" enterkeyhint="search">
       <button type="submit" aria-label="Search">${svg.search}</button>
       <div class="suggest" hidden></div>
     </form>
@@ -280,7 +282,7 @@ ${shelf('New releases', [...apps].sort(byNew).slice(0, 10), '/apps/')}
 ${shelf('Recently updated', [...apps].sort(byUpd).slice(0, 10), '/top/#updated')}
 ${shelf('Top games', games, '/category/games/')}
 ${shelf('Top apps', other, '/apps/')}
-${rowsSection('All apps', popular.slice(0, 24), '/apps/')}
+${tilesSection('All apps', popular.slice(0, 24), '/apps/')}
 ${apps.length ? '' : '<div class="empty"><h2>No apps yet</h2><p>New apps will appear here soon.</p></div>'}
 <section class="about">
   <h2>About ${SITE}</h2>
@@ -300,7 +302,7 @@ function listPage({ title, h1, intro, path, apps, cats, page, activeCat, crumbs 
 ${crumbs}
 <h1 class="page-title">${esc(h1)} <small>${apps.length} ${apps.length === 1 ? 'app' : 'apps'}</small></h1>
 ${intro ? `<p class="intro">${esc(intro)}</p>` : ''}
-${apps.length ? `${sortBar('#list')}<div class="grid" id="list">${apps.slice(0, 500).map((a) => row(a)).join('')}</div>` : '<div class="empty"><h2>Nothing here yet</h2><p>Check back soon.</p></div>'}`;
+${apps.length ? `${sortBar('#list')}<div class="tiles" id="list">${apps.slice(0, 500).map(tile).join('')}</div>` : '<div class="empty"><h2>Nothing here yet</h2><p>Check back soon.</p></div>'}`;
   const ld = [{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, url: `${BASE}${path}`,
     mainEntity: { '@type': 'ItemList', itemListElement: apps.slice(0, 30).map((a, i) => ({ '@type': 'ListItem', position: i + 1, url: `${BASE}${a.path}`, name: a.name })) } }];
   return layout({ title, desc: intro, path, body, ld, page, cats, activeCat });
@@ -461,6 +463,22 @@ async function main() {
   const apps = normalize(rawApps, reviews);
   console.log(`[build] ${rawApps.length} app record(s), ${apps.length} live`);
 
+  // ---- incremental build -------------------------------------------------------
+  // Listing pages (home, /apps/, categories, top, sitemap, search index) are rebuilt only when an app
+  // is added / removed / edited (or the generator itself changed). Download + review counters only
+  // change the page of that one app, so a download never rewrites the home page.
+  const STATE = join(ROOT, 'data/build-state.json');
+  const GEN = sha((await readFile(fileURLToPath(import.meta.url), 'utf8')) + ASSET_V + BASE + DB);
+  const prev = existsSync(STATE) ? JSON.parse(await readFile(STATE, 'utf8')) : null;
+  const meta = (a) => sha(JSON.stringify({ ...a, dl: 0, rc: 0, rating: 0, reviews: 0 }));
+  const cur = Object.fromEntries(apps.map((a) => [a.id, { h: meta(a), dl: a.dl, rc: a.rc, rating: a.rating }]));
+  const same = prev && prev.gen === GEN && !process.env.FULL_BUILD &&
+    Object.keys(cur).length === Object.keys(prev.apps).length && Object.keys(cur).every((k) => prev.apps[k] && prev.apps[k].h === cur[k].h);
+  // apps as shown in listings: frozen counters when nothing structural changed
+  const listApps = same ? apps.map((a) => ({ ...a, dl: prev.apps[a.id].dl, rc: prev.apps[a.id].rc, rating: prev.apps[a.id].rating })) : apps;
+  const state = same ? prev : { gen: GEN, apps: cur };
+  console.log(`[build] mode: ${same ? 'incremental (app pages only)' : 'full (listings + app pages)'}`);
+
   // Safety net: never wipe a working site because Firebase returned nothing unexpectedly.
   const idxPath = join(ROOT, 'apps-index.json');
   if (!apps.length && existsSync(idxPath) && !process.env.ALLOW_EMPTY) {
@@ -470,44 +488,48 @@ async function main() {
 
   // categories (only ones that have apps)
   const catMap = new Map();
-  for (const a of apps) {
+  for (const a of listApps) {
     const c = catMap.get(a.catSlug) || { slug: a.catSlug, name: a.catSlug === 'ai' ? 'AI' : titleCase(a.catRaw), icon: CAT_ICON[a.catSlug] || '📦', count: 0, last: 0 };
     c.count++; c.last = Math.max(c.last, a.updatedTs); catMap.set(a.catSlug, c);
   }
   const cats = [...catMap.values()].sort((x, y) => y.count - x.count || x.name.localeCompare(y.name));
 
-  // clean previously generated folders
-  for (const d of ['apps', 'category', 'top', 'search', 'library']) await rm(join(ROOT, d), { recursive: true, force: true });
-
-  await write('index.html', homePage(apps, cats));
-  await write('apps/index.html', listPage({
-    title: `All Android Apps & Games — Free APK Download | ${SITE}`, h1: 'All apps', path: '/apps/', apps: [...apps].sort(byDl), cats, page: 'apps',
-    intro: `Browse every Android app and game on ${SITE}. Sort by downloads, rating or latest update.`, crumbs: crumbHtml([['/', 'Home'], [null, 'All apps']])
-  }));
-  for (const a of apps) await write(`apps/${a.slug}/index.html`, appPage(a, apps, cats));
-  for (const c of cats) {
-    await write(`category/${c.slug}/index.html`, listPage({
-      title: `Best ${c.name} Apps for Android — Free APK Download | ${SITE}`, h1: `${c.name} apps`, path: `/category/${c.slug}/`,
-      apps: apps.filter((a) => a.catSlug === c.slug).sort(byDl), cats, page: 'apps', activeCat: c.slug,
-      intro: `Download the best ${c.name.toLowerCase()} apps for Android. ${c.count} ${c.count === 1 ? 'app' : 'apps'} with version, size and user reviews.`,
-      crumbs: crumbHtml([['/', 'Home'], [null, c.name]])
+  if (!same) {
+    // clean previously generated folders, then rebuild every listing page
+    for (const d of ['apps', 'category', 'top', 'search', 'library']) await rm(join(ROOT, d), { recursive: true, force: true });
+    await write('index.html', homePage(listApps, cats));
+    await write('apps/index.html', listPage({
+      title: `All Android Apps & Games — Free APK Download | ${SITE}`, h1: 'All apps', path: '/apps/', apps: [...listApps].sort(byDl), cats, page: 'apps',
+      intro: `Browse every Android app and game on ${SITE}. Sort by downloads, rating or latest update.`, crumbs: crumbHtml([['/', 'Home'], [null, 'All apps']])
+    }));
+    for (const c of cats) {
+      await write(`category/${c.slug}/index.html`, listPage({
+        title: `Best ${c.name} Apps for Android — Free APK Download | ${SITE}`, h1: `${c.name} apps`, path: `/category/${c.slug}/`,
+        apps: listApps.filter((a) => a.catSlug === c.slug).sort(byDl), cats, page: 'apps', activeCat: c.slug,
+        intro: `Download the best ${c.name.toLowerCase()} apps for Android. ${c.count} ${c.count === 1 ? 'app' : 'apps'} with version, size and user reviews.`,
+        crumbs: crumbHtml([['/', 'Home'], [null, c.name]])
+      }));
+    }
+    await write('top/index.html', topPage(listApps, cats));
+    await write('search/index.html', searchPage(listApps, cats));
+    await write('library/index.html', libraryPage(cats));
+    await write('404.html', notFound(cats));
+    await write('sitemap.xml', sitemap(listApps, cats));
+    await write('rss.xml', rss(listApps));
+    await write('robots.txt', robots());
+    await write('manifest.webmanifest', manifest());
+    await write('apps-index.json', JSON.stringify({
+      count: listApps.length,
+      apps: [...listApps].sort(byDl).map((a) => ({ id: a.id, slug: a.slug, name: a.name, icon: a.icon, cat: a.catRaw, dev: a.dev, size: a.size, ver: a.version, dl: a.dl,
+        r: a.rc > 0 ? a.rating : 0, short: trunc(a.short, 90), tags: a.tags }))
     }));
   }
-  await write('top/index.html', topPage(apps, cats));
-  await write('search/index.html', searchPage(apps, cats));
-  await write('library/index.html', libraryPage(cats));
-  await write('404.html', notFound(cats));
-  await write('sitemap.xml', sitemap(apps, cats));
-  await write('rss.xml', rss(apps));
-  await write('robots.txt', robots());
-  await write('manifest.webmanifest', manifest());
-  await write('apps-index.json', JSON.stringify({
-    count: apps.length,
-    apps: [...apps].sort(byDl).map((a) => ({ id: a.id, slug: a.slug, name: a.name, icon: a.icon, cat: a.catRaw, dev: a.dev, size: a.size, ver: a.version, dl: a.dl,
-      r: a.rc > 0 ? a.rating : 0, short: trunc(a.short, 90), tags: a.tags }))
-  }));
 
-  console.log(`[build] Done: ${apps.length} app page(s), ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'}.`);
+  // app pages: always refreshed with live counters + reviews; git only sees the ones that actually changed
+  for (const a of apps) await write(`apps/${a.slug}/index.html`, appPage(a, listApps, cats));
+  await write('data/build-state.json', JSON.stringify(state));
+
+  console.log(`[build] Done: ${apps.length} app page(s)${same ? '' : `, ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'}`}.`);
 }
 
 main().catch((e) => { console.error('[build] FAILED:', e); process.exit(1); });
