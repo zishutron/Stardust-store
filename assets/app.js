@@ -137,7 +137,8 @@
   /* ---------- library: account card, saved apps, download history ---------- */
   var acct = $('#acct');
   if (acct) {
-    var show = function (which) { ['acctLoading', 'acctOut', 'acctComplete', 'acctProfile'].forEach(function (x) { $('#' + x).hidden = x !== which; }); };
+    var resetPanel = function () { };
+    var show = function (which) { ['acctLoading', 'acctOut', 'acctComplete', 'acctProfile'].forEach(function (x) { $('#' + x).hidden = x !== which; }); if (which === 'acctProfile') resetPanel(); };
     var paintProfile = function (p, email) {
       var av = $('#pfAvatar'); av.textContent = (p.name.trim().charAt(0) || 'G').toUpperCase(); av.className = 'avatar ' + avc(p.username || p.name);
       $('#pfName').textContent = p.name; $('#pfHandle').textContent = '@' + p.username;
@@ -250,18 +251,74 @@
         .catch(function (err) { cmsg.textContent = err && err.message === 'taken' ? 'That username is already taken. Try another one.' : 'Could not save. Please try again.'; });
     });
     var signOut = function () { loadFirebase().then(function (a) { return a.signOut(); }).catch(function () { }).then(function () { setMe(null); setMode('in'); show('acctOut'); }); };
-    $('#cpOut').addEventListener('click', signOut); $('#pfOut').addEventListener('click', signOut);
+    $('#cpOut').addEventListener('click', signOut); $('#setOut').addEventListener('click', signOut);
 
-    var pf = $('#pfForm'), view = $('.pf-view', acct), pmsg = $('#pfMsg');
-    $('#pfEdit').addEventListener('click', function () { var p = me() || {}; pf.name.value = p.name || ''; pf.username.value = '@' + (p.username || ''); pf.bio.value = p.bio || ''; pmsg.textContent = ''; view.hidden = true; pf.hidden = false; pf.name.focus(); });
-    $('#pfCancel').addEventListener('click', function () { pf.hidden = true; view.hidden = false; });
+    var pf = $('#pfForm'), view = $('.pf-view', acct), pmsg = $('#pfMsg'), setp = $('#pfSettings'), del = $('#pfDelete'), dmsg = $('#delMsg');
+    var panel = function (w) { view.hidden = w !== 'view'; setp.hidden = w !== 'set'; pf.hidden = w !== 'edit'; del.hidden = w !== 'del'; };
+    resetPanel = function () { panel('view'); };
+    $('#pfSettingsBtn').addEventListener('click', function () { panel('set'); });
+    $('#pfBack').addEventListener('click', function () { panel('view'); });
+    $('#setEdit').addEventListener('click', function () { var p = me() || {}; pf.name.value = p.name || ''; pf.username.value = '@' + (p.username || ''); pf.bio.value = p.bio || ''; pmsg.textContent = ''; panel('edit'); pf.name.focus(); });
+    $('#pfCancel').addEventListener('click', function () { panel('set'); });
+    $('#delCancel').addEventListener('click', function () { panel('set'); });
+    $('#setDelete').addEventListener('click', function () {
+      dmsg.textContent = ''; del.password.value = '';
+      authUser().then(function (u) { $('#delPwWrap').hidden = !(u && u.providerData && u.providerData[0] && u.providerData[0].providerId === 'password'); });
+      panel('del');
+    });
+    del.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!confirm('Delete your account permanently? This cannot be undone.')) return;
+      var btn = $('button[type=submit]', del); btn.disabled = true; dmsg.textContent = 'Deleting…';
+      var prof = me() || {}, token;
+      authUser().then(function (user) {
+        if (!user) throw new Error('signin');
+        var pid = user.providerData && user.providerData[0] ? user.providerData[0].providerId : '';
+        // confirm it is really the owner (also avoids "requires recent login")
+        var reauth = pid === 'password'
+          ? (del.password.value ? user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, del.password.value)) : Promise.reject({ code: 'nopw' }))
+          : user.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
+        return reauth.then(function () { return user.getIdToken(true); }).then(function (tok) {
+          token = tok;
+          return loadIndex();
+        }).then(function (apps) {
+          // 1) my reviews on every app
+          return Promise.all(apps.map(function (a) {
+            return dbReq('GET', 'reviews/' + encodeURIComponent(a.id) + '/' + user.uid).then(function (r) {
+              if (!r) return null;
+              return dbReq('DELETE', 'reviews/' + encodeURIComponent(a.id) + '/' + user.uid, undefined, token).then(function () { return a.id; });
+            }).catch(function () { return null; });
+          }));
+        }).then(function (hit) {
+          // 2) fix rating + count of the apps I had reviewed
+          return Promise.all(hit.filter(Boolean).map(function (aid) {
+            return dbReq('GET', 'reviews/' + encodeURIComponent(aid)).then(function (all) {
+              var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object'; });
+              var avg = rs.length ? Math.round(rs.reduce(function (s, r) { return s + (+r.rating || 5); }, 0) / rs.length * 10) / 10 : 0;
+              return dbReq('PUT', 'apps/' + encodeURIComponent(aid) + '/reviewCount', rs.length).then(function () { return dbReq('PUT', 'apps/' + encodeURIComponent(aid) + '/rating', avg); });
+            }).catch(function () { });
+          }));
+        }).then(function () { return dbReq('DELETE', 'users/' + user.uid, undefined, token); })
+          .then(function () { return prof.username ? dbReq('DELETE', 'usernames/' + prof.username, undefined, token) : null; })
+          .then(function () { return user.delete(); });
+      }).then(function () {
+        setMe(null); store.set('zt_my_rev', {}); setMode('in'); panel('view'); show('acctOut'); toast('Account deleted');
+      }).catch(function (err) {
+        btn.disabled = false;
+        var c = (err && err.code) || '';
+        dmsg.textContent = c === 'nopw' ? 'Enter your password to confirm.'
+          : (c === 'auth/wrong-password' || c === 'auth/invalid-credential') ? 'Wrong password.'
+          : c === 'auth/popup-closed-by-user' ? 'Confirmation was cancelled.'
+          : err && err.message === 'signin' ? 'Please sign in again first.' : 'Could not delete the account. Please try again.';
+      });
+    });
     pf.addEventListener('submit', function (e) {
       e.preventDefault();
       var name = pf.name.value.trim(), bio = pf.bio.value.trim();
       if (name.length < 2) { pmsg.textContent = 'Please enter your name.'; return; }
       pmsg.textContent = 'Saving…';
       authUser().then(function (user) { return user.getIdToken().then(function (tok) { return dbReq('PATCH', 'users/' + user.uid, { name: name, bio: bio }, tok); }).then(function () {
-        var p = me() || {}; p.name = name; p.bio = bio; setMe(p, user.uid); paintProfile(p, user.email); pf.hidden = true; view.hidden = false; toast('Profile saved');
+        var p = me() || {}; p.name = name; p.bio = bio; setMe(p, user.uid); paintProfile(p, user.email); panel('view'); toast('Profile saved');
       }); }).catch(function () { pmsg.textContent = 'Could not save. Please try again.'; });
     });
 

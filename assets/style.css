@@ -320,3 +320,15 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .rv-as{margin:0;font-size:13px;color:var(--muted)}
 #revGate p{margin:0}
 .pf-since{margin:10px 0 0}
+
+/* settings list in the profile card */
+.pf-sethead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pf-sethead h3{font-size:18px}
+.pf-sethead .icon-btn{font-size:26px;line-height:1}
+.setlist{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.setlist li{border-bottom:1px solid var(--line)}
+.setlist a,.setlist button{display:flex;align-items:center;gap:14px;width:100%;padding:15px 4px;background:none;border:0;color:var(--text);font:inherit;text-align:left;text-decoration:none;cursor:pointer}
+.setlist svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;color:var(--muted)}
+.setlist .danger,.setlist .danger svg{color:#e11d48}
+.btn-danger{background:#e11d48;border-color:#e11d48;color:#fff}
+.pf-delete h3{color:#e11d48}
