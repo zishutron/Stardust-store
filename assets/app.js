@@ -205,12 +205,35 @@
     else if (navigator.clipboard) navigator.clipboard.writeText(data.url).then(function () { toast('Link copied'); });
   });
 
+  // The page is rebuilt every few minutes; until then show this visitor's own download/review right away
+  function fmtN(n) { return n < 1000 ? String(n) : n < 1e6 ? (n / 1e3).toFixed(n < 1e4 ? 1 : 0).replace(/\.0$/, '') + 'K' : (n / 1e6).toFixed(n < 1e7 ? 1 : 0).replace(/\.0$/, '') + 'M'; }
+  function bumpDl(add) {
+    var el = $('#dlCount'); if (!el) return;
+    var base = +el.dataset.dl || 0, all = store.get('zt_dl', {}), cur = all[id];
+    if (!cur || cur.base !== base) cur = { base: base, add: 0 };
+    cur.add += add; all[id] = cur; store.set('zt_dl', all);
+    el.textContent = fmtN(base + cur.add);
+  }
+  (function showPending() {
+    var el = $('#dlCount'), all = store.get('zt_dl', {});
+    if (el && all[id]) { if (all[id].base === (+el.dataset.dl || 0)) el.textContent = fmtN(all[id].base + all[id].add); else { delete all[id]; store.set('zt_dl', all); } }
+    var mine = store.get('zt_my_rev', {}), r = mine[id], list = $('#revList');
+    if (!r || !list) return;
+    if (list.querySelector('.rev[data-ts="' + r.ts + '"]')) { delete mine[id]; store.set('zt_my_rev', mine); return; } // the build already has it
+    var none = $('#noRev'); if (none) none.remove();
+    var rv = document.createElement('article'); rv.className = 'rev'; rv.dataset.ts = r.ts;
+    rv.innerHTML = '<header><b></b><span class="stars"></span></header><p></p><footer>Just now · will show for everyone after the next update</footer>';
+    $('b', rv).textContent = r.author; $('.stars', rv).textContent = '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating); $('p', rv).textContent = r.text;
+    list.insertBefore(rv, list.firstChild);
+  })();
+
   // download counter: one tiny REST call, the link itself opens normally in a new tab
   var lastHit = 0;
   document.addEventListener('click', function (e) {
     var a = e.target.closest('[data-download]'); if (!a) return;
     var h = store.get('zt_history', []).filter(function (x) { return x.id !== id; }); h.unshift({ id: id, t: Date.now() }); store.set('zt_history', h.slice(0, 50));
     if (Date.now() - lastHit < 5000) return; lastHit = Date.now();
+    bumpDl(1);
     try { fetch(DB + '/apps/' + encodeURIComponent(id) + '/downloadCount.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: 1 } }) }).catch(function () { }); } catch (err) { /* ignore */ }
     // per-day counter (IST day) so the developer console can draw real download charts
     try { var day = new Date(Date.now() + 19800000).toISOString().slice(0, 10); fetch(DB + '/stats/' + encodeURIComponent(id) + '/' + day + '.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: 1 } }) }).catch(function () { }); } catch (err) { /* ignore */ }
@@ -254,9 +277,10 @@
       })
       .then(function () {
         done.push(id); store.set('zt_reviewed', done);
+        var mine = store.get('zt_my_rev', {}); mine[id] = { ts: review.timestamp, author: review.author, text: text, rating: rating }; store.set('zt_my_rev', mine);
         var logs = store.get('zt_review_logs', []); logs.unshift('[' + rating + '★] ' + app.dataset.name + ': ' + text); store.set('zt_review_logs', logs.slice(0, 30));
         var list = $('#revList'), none = $('#noRev'); if (none) none.remove();
-        var el = document.createElement('article'); el.className = 'rev';
+        var el = document.createElement('article'); el.className = 'rev'; el.dataset.ts = review.timestamp;
         el.innerHTML = '<header><b></b><span class="stars"></span></header><p></p><footer>Just now</footer>';
         $('b', el).textContent = review.author; $('.stars', el).textContent = '★★★★★'.slice(0, rating) + '☆☆☆☆☆'.slice(0, 5 - rating); $('p', el).textContent = text;
         list.insertBefore(el, list.firstChild); form.text.value = ''; msg.textContent = 'Thanks! Your review is live and will show on the page for everyone shortly.';
