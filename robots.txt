@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /search/
 Disallow: /library/
+Disallow: /u/
 
 Sitemap: https://uptozishu.zishuai.cloud/sitemap.xml
