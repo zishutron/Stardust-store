@@ -452,7 +452,7 @@ function appPage(a, apps, cats) {
   const dist = [0, 0, 0, 0, 0]; a.reviews.forEach((r) => { dist[r.rating - 1]++; });
   const total = a.reviews.length;
   const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
-  const revHtml = a.reviews.slice(0, MAX_REVIEWS_BAKED).map((r) => `<article class="rev"><header><b>${esc(r.author)}</b><span class="stars" aria-label="${r.rating} out of 5">${stars(r.rating)}</span></header>
+  const revHtml = a.reviews.slice(0, MAX_REVIEWS_BAKED).map((r) => `<article class="rev" data-ts="${r.ts}"><header><b>${esc(r.author)}</b><span class="stars" aria-label="${r.rating} out of 5">${stars(r.rating)}</span></header>
     <p>${esc(r.text)}</p>${r.images.length ? `<div class="rev-img">${r.images.map((u) => `<img src="${esc(u)}" height="56" loading="lazy" alt="Review screenshot" data-zoom>`).join('')}</div>` : ''}
     <footer>${dateFmt(r.ts)}</footer>${r.reply ? `<div class="reply"><b>Developer reply</b><p>${esc(r.reply)}</p></div>` : ''}</article>`).join('');
   const info = [
@@ -476,7 +476,7 @@ function appPage(a, apps, cats) {
       <p class="dev">${esc(a.dev)}</p>
       <ul class="facts">
         <li><b>${a.rc > 0 ? `${a.rating.toFixed(1)} <span class="star">★</span>` : 'New'}</b><small>${a.rc > 0 ? `${fmtCount(a.rc)} ${a.rc === 1 ? 'review' : 'reviews'}` : 'no reviews'}</small></li>
-        <li><b>${fmtCount(a.dl)}</b><small>downloads</small></li>
+        <li><b id="dlCount" data-dl="${a.dl}">${fmtCount(a.dl)}</b><small>downloads</small></li>
         ${a.size ? `<li><b>${esc(a.size)}</b><small>size</small></li>` : ''}
         <li><b>${esc(a.version)}</b><small>version</small></li>
         <li><b>${esc(a.minAndroid)}+</b><small>Android</small></li>
