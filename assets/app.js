@@ -131,14 +131,21 @@
   function cleanUser(u) { return String(u || '').trim().toLowerCase().replace(/^@+/, ''); }
   function avc(seed) { var h = 0, s = String(seed || 'G').toLowerCase(); for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 997; return 'c' + (h % 8); }
   function me() { return store.get('zt_profile', null); }
-  function setMe(p, uid) { if (p) { store.set('zt_profile', { uid: uid || p.uid, name: p.name, username: p.username, bio: p.bio || '' }); store.set('zt_uid', uid || p.uid); } else { store.set('zt_profile', null); store.set('zt_uid', ''); store.set('zt_cloud', null); } if (p) { try { localStorage.removeItem('zt_saved'); localStorage.removeItem('zt_history'); } catch (e) { /* ignore */ } } }
-  // saved apps + download history live in the member's account (Firebase), cached on this device for speed
-  function signed() { return !!(me() && store.get('zt_uid', '')); }
-  function cloud() { var c = store.get('zt_cloud', null), u = store.get('zt_uid', ''); return c && c.uid === u ? c : { uid: u, saved: {}, history: {}, t: 0 }; }
-  function withToken(fn) { return authUser().then(function (user) { if (!user) throw new Error('signin'); return user.getIdToken().then(function (t) { return fn(user, t); }); }); }
-  function syncCloud() {
-    return withToken(function (user, t) { return dbReq('GET', 'userdata/' + user.uid, undefined, t).then(function (d) { d = d || {}; var c = { uid: user.uid, saved: d.saved || {}, history: d.history || {}, t: Date.now() }; store.set('zt_cloud', c); return c; }); });
+  function setMe(p, uid) { if (p) { store.set('zt_profile', { uid: uid || p.uid, name: p.name, username: p.username, bio: p.bio || '' }); store.set('zt_uid', uid || p.uid); } else { store.set('zt_profile', null); store.set('zt_uid', ''); } if (p) migrateLocal(uid || p.uid); }
+  // lists saved before accounts existed (plain arrays) move into the member's own lists once
+  function migrateLocal(u) {
+    var s = store.get('zt_saved', null), h = store.get('zt_history', null); if (!s && !h) return;
+    var sm = store.get('zt_saved_' + u, {}), hm = store.get('zt_hist_' + u, {}), t = Date.now();
+    (Array.isArray(s) ? s : []).forEach(function (id, i) { if (!sm[id]) sm[id] = t - i; });
+    (Array.isArray(h) ? h : []).forEach(function (x) { if (x && x.id && !hm[x.id]) hm[x.id] = x.t || t; });
+    store.set('zt_saved_' + u, sm); store.set('zt_hist_' + u, hm);
+    try { localStorage.removeItem('zt_saved'); localStorage.removeItem('zt_history'); } catch (e) { /* ignore */ }
   }
+  // saved apps + download history: kept on this phone only (never uploaded), separate for each signed-in member
+  function signed() { return !!(me() && store.get('zt_uid', '')); }
+  function cloud() { var u = store.get('zt_uid', ''); return { uid: u, saved: store.get('zt_saved_' + u, {}), history: store.get('zt_hist_' + u, {}) }; }
+  function putCloud(c) { store.set('zt_saved_' + c.uid, c.saved); store.set('zt_hist_' + c.uid, c.history); }
+  function withToken(fn) { return authUser().then(function (user) { if (!user) throw new Error('signin'); return user.getIdToken().then(function (t) { return fn(user, t); }); }); }
   function needSignIn(msg) { toast(msg || 'Please sign in first'); setTimeout(function () { location.href = '/library/?next=' + encodeURIComponent(location.pathname); }, 900); }
   function safeNext() { var n = new URLSearchParams(location.search).get('next') || ''; return (n.charAt(0) === '/' && n.charAt(1) !== '/') ? n : ''; }
 
@@ -200,10 +207,8 @@
       return dbReq('GET', 'users/' + user.uid).then(function (prof) {
         if (prof && prof.username) {
           setMe(prof, user.uid);
-          return syncCloud().catch(function () { }).then(function () {
-            var nx = safeNext(); if (nx) { location.replace(nx); return; }
-            paintProfile(prof, user.email); show('acctProfile');
-          });
+          var nx = safeNext(); if (nx) { location.replace(nx); return; }
+          paintProfile(prof, user.email); show('acctProfile'); return;
         }
         var c = $('#acctComplete'); c.name.value = user.displayName || ''; show('acctComplete');
       }).catch(function () { show('acctOut'); amsg.textContent = 'Could not load your profile. Check your connection.'; });
@@ -322,12 +327,11 @@
               return dbReq('PUT', 'apps/' + encodeURIComponent(aid) + '/reviewCount', rs.length).then(function () { return dbReq('PUT', 'apps/' + encodeURIComponent(aid) + '/rating', avg); });
             }).catch(function () { });
           }));
-        }).then(function () { return dbReq('DELETE', 'userdata/' + user.uid, undefined, token).catch(function () { }); })
-          .then(function () { return dbReq('DELETE', 'users/' + user.uid, undefined, token); })
+        }).then(function () { return dbReq('DELETE', 'users/' + user.uid, undefined, token); })
           .then(function () { return prof.username ? dbReq('DELETE', 'usernames/' + prof.username, undefined, token) : null; })
           .then(function () { return user.delete(); });
       }).then(function () {
-        setMe(null); store.set('zt_my_rev', {}); setMode('in'); panel('view'); show('acctOut'); toast('Account deleted');
+        try { localStorage.removeItem('zt_saved_' + prof.uid); localStorage.removeItem('zt_hist_' + prof.uid); } catch (e) { /* ignore */ } setMe(null); store.set('zt_my_rev', {}); setMode('in'); panel('view'); show('acctOut'); toast('Account deleted');
       }).catch(function (err) {
         btn.disabled = false;
         var c = (err && err.code) || '';
@@ -380,7 +384,7 @@
     var box = saved || hist, fmtD = function (t) { try { return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
     var ch = $('#clearHistory');
     if (!signed()) {
-      box.innerHTML = '<div class="card gate-card"><h3>Sign in to see this</h3><p class="muted">' + (saved ? 'Your saved apps' : 'Your download history') + ' are kept in your UptoZishu account, so you can open them on any phone.</p><a class="btn btn-primary" href="/library/?next=' + encodeURIComponent(location.pathname) + '">Sign in</a></div>';
+      box.innerHTML = '<div class="card gate-card"><h3>Sign in to see this</h3><p class="muted">' + (saved ? 'Your saved apps' : 'Your download history') + ' are kept privately on this phone for your account.</p><a class="btn btn-primary" href="/library/?next=' + encodeURIComponent(location.pathname) + '">Sign in</a></div>';
       if (ch) ch.hidden = true;
     } else {
       var render = function (c, apps) {
@@ -390,15 +394,8 @@
         if (saved) box.innerHTML = ids.length ? ids.map(function (k) { return rowHtml(byId[k]); }).join('') : '<p class="muted">No saved apps yet. Tap “Save” on any app page and it will show up here.</p>';
         else box.innerHTML = ids.length ? ids.map(function (k) { return rowHtml(byId[k], 'Downloaded ' + fmtD(map[k])); }).join('') : '<p class="muted">No downloads yet.</p>';
       };
-      loadIndex().then(function (apps) {
-        render(cloud(), apps);
-        syncCloud().then(function (c) { render(c, apps); }).catch(function () { });
-      });
-      if (ch) ch.addEventListener('click', function () {
-        withToken(function (user, t) { return dbReq('DELETE', 'userdata/' + user.uid + '/history', undefined, t); }).then(function () {
-          var c = cloud(); c.history = {}; store.set('zt_cloud', c); hist.innerHTML = '<p class="muted">No downloads yet.</p>';
-        }).catch(function () { toast('Could not clear history'); });
-      });
+      loadIndex().then(function (apps) { render(cloud(), apps); });
+      if (ch) ch.addEventListener('click', function () { var c = cloud(); c.history = {}; putCloud(c); hist.innerHTML = '<p class="muted">No downloads yet.</p>'; });
     }
   }
 
@@ -435,7 +432,7 @@
   window.addEventListener('popstate', function () { closeLb(true); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLb(); });
 
-  // save to library (stored in the member's account)
+  // save to library (members only; stored on this phone)
   var saveBtn = $('#saveBtn');
   function paintSave() {
     var on = !!(signed() && cloud().saved[id]);
@@ -445,16 +442,10 @@
     paintSave();
     saveBtn.addEventListener('click', function () {
       if (!signed()) { needSignIn('Sign in to save apps'); return; }
-      var c = cloud(), was = !!c.saved[id];
-      if (was) delete c.saved[id]; else c.saved[id] = Date.now();
-      store.set('zt_cloud', c); paintSave();
-      withToken(function (user, t) { return dbReq(was ? 'DELETE' : 'PUT', 'userdata/' + user.uid + '/saved/' + encodeURIComponent(id), was ? undefined : c.saved[id], t); })
-        .catch(function () { var r = cloud(); if (was) r.saved[id] = Date.now(); else delete r.saved[id]; store.set('zt_cloud', r); paintSave(); toast('Could not update your saved apps'); });
+      var c = cloud();
+      if (c.saved[id]) delete c.saved[id]; else c.saved[id] = Date.now();
+      putCloud(c); paintSave();
     });
-    // pick up changes made on another phone (at most every 10 minutes)
-    if (signed() && Date.now() - (cloud().t || 0) > 600000) {
-      (window.requestIdleCallback || function (f) { setTimeout(f, 1500); })(function () { syncCloud().then(paintSave).catch(function () { }); });
-    }
   }
 
   // share
@@ -500,10 +491,7 @@
   var lastHit = 0;
   document.addEventListener('click', function (e) {
     var a = e.target.closest('[data-download]'); if (!a) return;
-    if (signed()) {
-      var cc = cloud(), now = Date.now(); cc.history[id] = now; store.set('zt_cloud', cc);
-      withToken(function (user, t) { return dbReq('PUT', 'userdata/' + user.uid + '/history/' + encodeURIComponent(id), now, t); }).catch(function () { });
-    }
+    if (signed()) { var cc = cloud(); cc.history[id] = Date.now(); putCloud(cc); }
     if (Date.now() - lastHit < 5000) return; lastHit = Date.now();
     bumpDl(1);
     try { fetch(DB + '/apps/' + encodeURIComponent(id) + '/downloadCount.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: 1 } }) }).catch(function () { }); } catch (err) { /* ignore */ }
