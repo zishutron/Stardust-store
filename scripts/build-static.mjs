@@ -542,7 +542,7 @@ const privacyPage = (cats) => infoPage({ cats, path: '/privacy.html', title: `Pr
 <p>Clearing your browser data removes these and we cannot restore them.</p>
 <h2>How we use it</h2>
 <ul><li>To run your account, profile and reviews.</li><li>To keep one review per person per app and usernames unique.</li><li>To count views and downloads.</li><li>To handle reports and keep the store safe.</li></ul>
-<p>We do not sell your personal data.</p>
+<p>We do not sell or share your personal data with anyone. It stays in our Firebase database, which we use only to run the store.</p>
 <h2>Services we use</h2>
 <ul><li><b>Firebase (Google)</b> for sign-in (email or Google) and our database.</li><li><b>GitHub Pages</b> to host the store's pages.</li><li><b>Developer download links:</b> when you tap Download you go to a link chosen by the app's developer, and their own privacy policy applies there.</li></ul>
 <p>These services may process basic technical data such as your IP address under their own policies.</p>
