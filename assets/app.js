@@ -134,18 +134,19 @@
   function setMe(p, uid) { if (p) { store.set('zt_profile', { uid: uid || p.uid, name: p.name, username: p.username, bio: p.bio || '' }); store.set('zt_uid', uid || p.uid); } else { store.set('zt_profile', null); store.set('zt_uid', ''); } if (p) migrateLocal(uid || p.uid); }
   // lists saved before accounts existed (plain arrays) move into the member's own lists once
   function migrateLocal(u) {
-    var s = store.get('zt_saved', null), h = store.get('zt_history', null), gs = store.get('zt_saved_', null), gh = store.get('zt_hist_', null);
-    if (!s && !h && !gs && !gh) return;
-    var sm = store.get('zt_saved_' + u, {}), hm = store.get('zt_hist_' + u, {}), t = Date.now();
-    Object.keys(gs || {}).forEach(function (id) { if (!sm[id]) sm[id] = gs[id]; }); Object.keys(gh || {}).forEach(function (id) { if (!hm[id]) hm[id] = gh[id]; });
+    // one shared list on this phone (key suffix ''), used with or without login; fold in any older per-account / legacy lists once
+    var s = store.get('zt_saved', null), h = store.get('zt_history', null), us = store.get('zt_saved_' + u, null), uh = store.get('zt_hist_' + u, null);
+    if (!s && !h && !us && !uh) return;
+    var sm = store.get('zt_saved_', {}), hm = store.get('zt_hist_', {}), t = Date.now();
+    Object.keys(us || {}).forEach(function (id) { if (!sm[id]) sm[id] = us[id]; }); Object.keys(uh || {}).forEach(function (id) { if (!hm[id]) hm[id] = uh[id]; });
     (Array.isArray(s) ? s : []).forEach(function (id, i) { if (!sm[id]) sm[id] = t - i; });
     (Array.isArray(h) ? h : []).forEach(function (x) { if (x && x.id && !hm[x.id]) hm[x.id] = x.t || t; });
-    store.set('zt_saved_' + u, sm); store.set('zt_hist_' + u, hm);
-    try { ['zt_saved', 'zt_history', 'zt_saved_', 'zt_hist_'].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) { /* ignore */ }
+    store.set('zt_saved_', sm); store.set('zt_hist_', hm);
+    try { ['zt_saved', 'zt_history', 'zt_saved_' + u, 'zt_hist_' + u].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) { /* ignore */ }
   }
   // saved apps + download history: kept on this phone only (never uploaded). Visitors have their own list; each signed-in member gets a separate one
   function signed() { return !!(me() && store.get('zt_uid', '')); }
-  function cloud() { var u = store.get('zt_uid', ''); return { uid: u, saved: store.get('zt_saved_' + u, {}), history: store.get('zt_hist_' + u, {}) }; }
+  function cloud() { var u = ''; return { uid: u, saved: store.get('zt_saved_' + u, {}), history: store.get('zt_hist_' + u, {}) }; }
   function putCloud(c) { store.set('zt_saved_' + c.uid, c.saved); store.set('zt_hist_' + c.uid, c.history); }
   function withToken(fn) { return authUser().then(function (user) { if (!user) throw new Error('signin'); return user.getIdToken().then(function (t) { return fn(user, t); }); }); }
   function needSignIn(msg) { toast(msg || 'Please sign in first'); setTimeout(function () { location.href = '/library/?next=' + encodeURIComponent(location.pathname); }, 900); }
@@ -335,7 +336,7 @@
           .then(function () { return prof.username ? dbReq('DELETE', 'usernames/' + prof.username, undefined, token) : null; })
           .then(function () { return user.delete(); });
       }).then(function () {
-        try { localStorage.removeItem('zt_saved_' + prof.uid); localStorage.removeItem('zt_hist_' + prof.uid); } catch (e) { /* ignore */ } setMe(null); store.set('zt_my_rev', {}); setMode('in'); panel('view'); show('acctOut'); toast('Account deleted');
+        setMe(null); store.set('zt_my_rev', {}); setMode('in'); panel('view'); show('acctOut'); toast('Account deleted');
       }).catch(function (err) {
         btn.disabled = false;
         var c = (err && err.code) || '';
