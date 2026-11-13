@@ -28,6 +28,13 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // ---------------------------------------------------------------- config
 const env = (k, d = '') => (process.env[k] || d).trim();
+// Public Firebase web config (safe to expose; access is enforced by the database rules)
+const FB_CONFIG = {
+  apiKey: env('FB_API_KEY', 'AIzaSyDCOq720_5pxOsUYXovvi4DaUsryv1oPeA'),
+  authDomain: env('FB_AUTH_DOMAIN', 'stardust-store.firebaseapp.com'),
+  projectId: env('FB_PROJECT_ID', 'stardust-store'),
+  appId: env('FB_APP_ID', '1:979834482722:web:dabbc453543b7e03c91a7b')
+};
 const DB = env('STORE_DB_URL', 'https://stardust-store-default-rtdb.firebaseio.com').replace(/\/+$/, '');
 const BASE = env('SITE_BASE_URL', 'https://uptozishu.zishuai.cloud').replace(/\/+$/, '');
 const MAIN_URL = env('MAIN_SITE_URL', 'https://zishutron.zishuai.cloud').replace(/\/+$/, '');
@@ -56,6 +63,9 @@ const CAT_ICON = {
 
 // ---------------------------------------------------------------- helpers
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// soft "contacts app" avatar colour (c0..c7), stable per name; keep in sync with assets/app.js
+const avc = (seed) => { let h = 0; for (const ch of String(seed || 'G').toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) % 997; return 'c' + (h % 8); };
+const cleanUser = (u) => { const x = String(u || '').toLowerCase(); return /^[a-z0-9_.]{3,20}$/.test(x) ? x : ''; };
 const escXml = (s) => esc(s).replace(/&#39;/g, '&apos;');
 const str = (v) => (v == null ? '' : String(v)).trim();
 const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
@@ -126,8 +136,9 @@ function normalize(apps, reviewsAll, knownReviews) {
     const updatedTs = Date.parse(str(a.updatedDate)) || ts;
     const history = [...new Set([...list(a.versionHistory), str(a.version)].filter(Boolean))];
 
-    const revs = Object.values(reviewsAll[a.id] || {}).filter((r) => r && typeof r === 'object')
-      .map((r) => ({
+    const revs = Object.entries(reviewsAll[a.id] || {}).filter(([, r]) => r && typeof r === 'object')
+      .map(([key, r]) => ({
+        uid: str(r.uid) && str(r.uid) === key ? key : '', user: cleanUser(r.username),
         author: trunc(r.author || 'Anonymous', 40), handle: trunc(r.handle || '', 40), text: str(r.text).slice(0, 1000),
         rating: Math.min(5, Math.max(1, Math.round(num(r.rating) || 5))), ts: num(r.timestamp),
         images: list(r.images).map(httpUrl).filter(Boolean).slice(0, 4), reply: str(r.reply).slice(0, 1000)
@@ -251,7 +262,7 @@ function layout({ title, desc, path, body, ld = [], image, noindex = false, ogTy
 <meta property="og:url" content="${esc(canonical)}">
 <meta property="og:image" content="${esc(img)}">
 <meta name="twitter:card" content="summary">
-<script>try{var t=localStorage.getItem('zt_theme')||localStorage.getItem('stardust_theme');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}window.ZT={db:${JSON.stringify(DB)}};</script>
+<script>try{var t=localStorage.getItem('zt_theme')||localStorage.getItem('stardust_theme');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}window.ZT={db:${JSON.stringify(DB)},fb:${JSON.stringify(FB_CONFIG)}};</script>
 <link rel="stylesheet" href="/assets/style.css?v=${ASSET_V}">
 ${head}${ld.map(jsonLd).join('\n')}
 </head>
@@ -369,29 +380,73 @@ function searchPage(apps, cats) {
 
 const pencil = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 function libraryPage(cats) {
+  const fld = (name, label, extra = '') => `<label>${label}<input name="${name}" ${extra}></label>`;
   const body = `<h1 class="sr-only">My library</h1>
-<section class="card profile" id="profileCard" aria-label="Your profile">
-  <div class="pf-view">
-    <div class="pf-top"><div class="avatar" id="pfAvatar" aria-hidden="true">G</div>
-      <div class="pf-info"><h2 id="pfName">Guest User</h2><p class="pf-handle" id="pfHandle">@guest</p></div>
-      <button class="icon-btn" id="pfEdit" type="button" aria-label="Edit profile">${pencil}</button></div>
-    <p class="pf-bio" id="pfBio"></p>
-    <div class="pf-actions">
-      <a class="btn btn-ghost" href="/library/saved/">${svg.heart}<span>Saved apps</span><small id="savedCount"></small></a>
-      <a class="btn btn-ghost" href="/library/history/">${svg.download}<span>Download history</span><small id="historyCount"></small></a>
-    </div>
-    <p class="pf-legal"><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></p>
+<section class="card account" id="acct" aria-label="Your account">
+  <p class="muted center" id="acctLoading">Loading…</p>
+
+  <div id="acctOut" hidden>
+    <h2>Sign in to UptoZishu</h2>
+    <p class="muted">Create a free account to review apps and show your profile. Your saved apps and download history stay private on this device.</p>
+    <button class="btn gbtn" id="gBtn" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg><span>Continue with Google</span></button>
+    <p class="or"><span>or use email</span></p>
+    <form class="form" id="authForm" novalidate>
+      <div class="su" hidden>
+        ${fld('name', 'Name', 'maxlength="40" autocomplete="name" placeholder="Your name"')}
+        ${fld('username', 'Username', 'maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."')}
+        <label>Bio<textarea name="bio" rows="2" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
+      </div>
+      ${fld('email', 'Email', 'type="email" autocomplete="email" placeholder="you@example.com"')}
+      ${fld('password', 'Password', 'type="password" autocomplete="current-password" placeholder="At least 6 characters"')}
+      <div class="su" hidden>${fld('confirm', 'Confirm password', 'type="password" autocomplete="new-password" placeholder="Type the password again"')}</div>
+      <button class="btn btn-primary" id="authSubmit" type="submit">Sign in</button>
+      <p class="muted small center" id="authMsg" role="status"></p>
+      <p class="center small"><button class="linkbtn" id="authToggle" type="button">New here? Create an account</button> · <button class="linkbtn" id="authForgot" type="button">Forgot password?</button></p>
+    </form>
   </div>
-  <form class="pf-edit form" id="pfForm" hidden>
-    <h3>Edit profile</h3>
-    <label>Name<input name="name" maxlength="40" placeholder="Guest User" autocomplete="name"></label>
-    <label>Username<input name="handle" maxlength="30" placeholder="guest" autocapitalize="none" autocomplete="username"></label>
-    <label>Bio<textarea name="bio" rows="3" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
-    <div class="form-row"><button class="btn btn-primary" type="submit">Save</button><button class="btn" id="pfCancel" type="button">Cancel</button></div>
+
+  <form class="form" id="acctComplete" hidden novalidate>
+    <h2>Finish your profile</h2>
+    <p class="muted">Choose a unique username. It is shown on your reviews so people can find your profile.</p>
+    ${fld('name', 'Name', 'maxlength="40" autocomplete="name"')}
+    ${fld('username', 'Username', 'maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."')}
+    <label>Bio<textarea name="bio" rows="2" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
+    <div class="form-row"><button class="btn btn-primary" type="submit">Save profile</button><button class="btn" id="cpOut" type="button">Sign out</button></div>
+    <p class="muted small" id="cpMsg" role="status"></p>
   </form>
+
+  <div id="acctProfile" hidden>
+    <div class="pf-view">
+      <div class="pf-top"><div class="avatar" id="pfAvatar" aria-hidden="true">G</div>
+        <div class="pf-info"><h2 id="pfName"></h2><p class="pf-handle" id="pfHandle"></p></div>
+        <button class="icon-btn" id="pfEdit" type="button" aria-label="Edit profile">${pencil}</button></div>
+      <p class="pf-bio" id="pfBio"></p>
+      <p class="muted small" id="pfEmail"></p>
+      <button class="btn pf-out" id="pfOut" type="button">Sign out</button>
+    </div>
+    <form class="pf-edit form" id="pfForm" hidden>
+      <h3>Edit profile</h3>
+      <label>Name<input name="name" maxlength="40" autocomplete="name"></label>
+      <label>Username<input name="username" disabled></label>
+      <label>Bio<textarea name="bio" rows="3" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
+      <div class="form-row"><button class="btn btn-primary" type="submit">Save</button><button class="btn" id="pfCancel" type="button">Cancel</button></div>
+      <p class="muted small" id="pfMsg" role="status"></p>
+    </form>
+  </div>
 </section>
-<p class="muted center">Your profile and library are stored on this device only.</p>`;
-  return layout({ title: `My library — ${SITE}`, desc: 'Your profile, saved apps and download history on UptoZishu.', path: '/library/', body, page: 'library', cats, noindex: true });
+<div class="pf-actions lib-links">
+  <a class="btn btn-ghost" href="/library/saved/">${svg.heart}<span>Saved apps</span><small id="savedCount"></small></a>
+  <a class="btn btn-ghost" href="/library/history/">${svg.download}<span>Download history</span><small id="historyCount"></small></a>
+</div>
+<p class="pf-legal lib-legal"><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></p>
+<p class="muted center small">Saved apps and download history are stored on this device only. Other people can never see them.</p>`;
+  return layout({ title: `My library — ${SITE}`, desc: 'Your account, saved apps and download history on UptoZishu.', path: '/library/', body, page: 'library', cats, noindex: true });
+}
+function userPage(cats) {
+  const body = `<h1 class="sr-only">Profile</h1>
+<section class="card profile" id="userCard" aria-live="polite"><p class="muted center">Loading profile…</p></section>
+<p class="muted center small">Only a name, username and bio are public. Saved apps, download history and email are private.</p>`;
+  return layout({ title: `Profile — ${SITE}`, desc: `A member profile on ${SITE}.`, path: '/u/', body, page: 'library', cats, noindex: true });
 }
 function librarySubPage({ cats, path, h1, what, inner }) {
   const body = `${crumbHtml([['/library/', 'Library'], [null, h1]])}<h1 class="page-title">${h1} <small>${what}</small></h1>${inner}`;
@@ -452,10 +507,13 @@ function appPage(a, apps, cats) {
   const dist = [0, 0, 0, 0, 0]; a.reviews.forEach((r) => { dist[r.rating - 1]++; });
   const total = a.reviews.length;
   const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
-  const revHtml = a.reviews.slice(0, MAX_REVIEWS_BAKED).map((r) => `<article class="rev" data-ts="${r.ts}"><header><span class="rv-av" aria-hidden="true">${esc((r.author.trim().charAt(0) || 'G').toUpperCase())}</span><b>${esc(r.author)}</b></header>
+  const revHtml = a.reviews.slice(0, MAX_REVIEWS_BAKED).map((r) => {
+    const who = `<span class="rv-av ${avc(r.user || r.author)}" aria-hidden="true">${esc((r.author.trim().charAt(0) || 'G').toUpperCase())}</span><b>${esc(r.author)}</b>`;
+    return `<article class="rev" data-ts="${r.ts}"${r.uid ? ` data-uid="${esc(r.uid)}"` : ''}><header>${r.user ? `<a class="rv-who" href="/u/?u=${esc(r.user)}" aria-label="View ${esc(r.author)}'s profile">${who}</a>` : who}</header>
     <div class="rv-meta"><span class="stars" aria-label="${r.rating} out of 5">${stars(r.rating)}</span><time>${dateFmt(r.ts)}</time></div>
     <p>${esc(r.text)}</p>${r.images.length ? `<div class="rev-img">${r.images.map((u) => `<img src="${esc(u)}" height="56" loading="lazy" alt="Review screenshot" data-zoom>`).join('')}</div>` : ''}
-    ${r.reply ? `<div class="reply"><b>Developer reply</b><p>${esc(r.reply)}</p></div>` : ''}</article>`).join('');
+    ${r.reply ? `<div class="reply"><b>Developer reply</b><p>${esc(r.reply)}</p></div>` : ''}</article>`;
+  }).join('');
   const info = [
     ['Package', a.pkg], ['Version', a.version], ['Size', a.size], ['Category', `<a href="/category/${a.catSlug}/">${esc(a.catRaw)}</a>`, true],
     ['Requires', `Android ${a.minAndroid}+`], ['Updated', dateFmt(a.updatedTs)], ['Released', dateFmt(a.ts)], ['Downloads', a.dl.toLocaleString('en-US')],
@@ -499,10 +557,14 @@ function appPage(a, apps, cats) {
     <div class="rev-sum"><div class="big"><b>${a.rc > 0 ? a.rating.toFixed(1) : '–'}</b><span class="stars">${stars(Math.round(a.rc > 0 ? a.rating : 0))}</span><small>${a.rc} ${a.rc === 1 ? 'review' : 'reviews'}</small></div>
       <div class="bars">${[5, 4, 3, 2, 1].map((n) => `<div><span>${n}</span><i><u style="width:${total ? Math.round((dist[n - 1] / total) * 100) : 0}%"></u></i><span>${dist[n - 1]}</span></div>`).join('')}</div></div>
     <div id="revList">${revHtml || '<p class="muted" id="noRev">No reviews yet. Be the first to review this app.</p>'}</div>
-    <form class="card form" id="revForm" novalidate><h3>Write a review</h3>
+    <div class="card form" id="revGate"><h3>Write a review</h3><p class="muted">Sign in to rate and review this app. It keeps reviews genuine — one review per person.</p>
+      <div class="form-row"><a class="btn btn-primary" id="revSignIn" href="/library/">Sign in to review</a></div></div>
+    <form class="card form" id="revForm" novalidate hidden><h3>Write a review</h3>
+      <p class="rv-as" id="revAs"></p>
       <div class="starpick" role="radiogroup" aria-label="Your rating">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="${n === 5}" data-s="${n}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}</div>
       <textarea name="text" rows="3" maxlength="500" placeholder="Share your experience with ${esc(a.name)}…" required aria-label="Your review"></textarea>
-      <div class="form-row"><button class="btn btn-primary" type="submit">Post review</button><span class="muted" id="revMsg" role="status"></span></div></form>
+      <div class="form-row"><button class="btn btn-primary" type="submit">Post review</button><span class="muted" id="revMsg" role="status"></span></div>
+      <p class="muted small">One review per app. Posting again updates your review.</p></form>
   </section>
   ${shelf('You may also like', more)}
 </article>
@@ -550,7 +612,7 @@ function rss(apps) {
   const lbd = apps.length ? new Date(Math.max(...apps.map((a) => a.updatedTs || 0))).toUTCString() : new Date(0).toUTCString();
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n  <channel>\n    <title>${SITE}</title>\n    <link>${BASE}/</link>\n    <description>${escXml(SITE_DESC)}</description>\n    <language>en</language>\n    <lastBuildDate>${lbd}</lastBuildDate>\n    <atom:link href="${BASE}/rss.xml" rel="self" type="application/rss+xml"/>\n${items}\n  </channel>\n</rss>\n`;
 }
-const robots = () => `User-agent: *\nAllow: /\nDisallow: /search/\nDisallow: /library/\n\nSitemap: ${BASE}/sitemap.xml\n`;
+const robots = () => `User-agent: *\nAllow: /\nDisallow: /search/\nDisallow: /library/\nDisallow: /u/\n\nSitemap: ${BASE}/sitemap.xml\n`;
 const manifest = () => JSON.stringify({ name: SITE, short_name: 'UptoZishu', description: SITE_DESC, start_url: '/', scope: '/', display: 'standalone',
   background_color: '#f6f7fb', theme_color: '#2563eb', icons: [{ src: '/favicon.png', sizes: '256x256', type: 'image/png', purpose: 'any' }] }, null, 2);
 
@@ -624,6 +686,7 @@ async function main() {
     await write('top/index.html', topPage(listApps, cats));
     await write('search/index.html', searchPage(listApps, cats));
     await write('library/index.html', libraryPage(cats));
+    await write('u/index.html', userPage(cats));
     await write('library/saved/index.html', savedPage(cats));
     await write('library/history/index.html', historyPage(cats));
     await write('about/index.html', aboutPage(cats));
