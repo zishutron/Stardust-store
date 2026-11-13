@@ -525,6 +525,57 @@ const supportPage = (cats) => infoPage({ cats, path: '/support/', title: `Custom
 <p>Publish and manage your apps in the <a href="${esc(CONSOLE_URL)}">developer console</a>. For help with it, use the same email address.</p>
 <p class="muted">See also: <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of service</a></p>` });
 
+const UPDATED = '13 November 2026';
+const privacyPage = (cats) => infoPage({ cats, path: '/privacy.html', title: `Privacy policy — ${SITE}`, h1: 'Privacy policy', sub: `updated ${UPDATED}`,
+  desc: `What ${SITE} stores about you, what stays on your phone, and how to edit or delete your data.`,
+  inner: `<p>${SITE} is a web app store. You can browse and download apps without an account. An account is only needed to post reviews.</p>
+<h2>What we store on our servers</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Data</th><th>Why</th><th>Public?</th></tr></thead><tbody>
+<tr><td>Name, username, bio, sign-up date</td><td>Your profile and reviews</td><td>Yes, on your public profile</td></tr>
+<tr><td>Email and password (or Google sign-in)</td><td>Signing you in</td><td>No, never shown</td></tr>
+<tr><td>Reviews (rating, text, your name and username)</td><td>Show reviews on the app page</td><td>Yes</td></tr>
+<tr><td>Reports you send about an app</td><td>Review and remove bad apps</td><td>No</td></tr>
+<tr><td>App counters: views, downloads (also per day), rating</td><td>Show popularity to everyone and to the app's developer</td><td>Yes, as totals, not linked to you</td></tr></tbody></table></div>
+<p>If you only browse, no personal data about you is saved on our servers.</p>
+<h2>What stays on your phone</h2>
+<ul><li>Saved apps and download history: one list on this phone, the same with or without login. It is never uploaded.</li><li>Your theme (light or dark).</li><li>Small temporary items so your latest review or download shows before the store page refreshes.</li></ul>
+<p>Clearing your browser data removes these and we cannot restore them.</p>
+<h2>How we use it</h2>
+<ul><li>To run your account, profile and reviews.</li><li>To keep one review per person per app and usernames unique.</li><li>To count views and downloads.</li><li>To handle reports and keep the store safe.</li></ul>
+<p>We do not sell your personal data.</p>
+<h2>Services we use</h2>
+<ul><li><b>Firebase (Google)</b> for sign-in (email or Google) and our database.</li><li><b>GitHub Pages</b> to host the store's pages.</li><li><b>Developer download links:</b> when you tap Download you go to a link chosen by the app's developer, and their own privacy policy applies there.</li></ul>
+<p>These services may process basic technical data such as your IP address under their own policies.</p>
+<h2>Your choices</h2>
+<ul><li><b>Edit</b> your name and bio in Library, Settings, Edit profile. Your username is locked once chosen.</li><li><b>Delete your account</b> in Library, Settings, Delete account. This removes your profile, username and all your reviews, and updates app ratings.</li><li><b>Report</b> an app in Library, Settings, Report an app.</li><li><b>Ask us</b> about your data by email.</li></ul>
+<h2>Children</h2>
+<p>${SITE} is not meant for children under 13 and we do not knowingly collect their data. If you think a child made an account, email us and we will delete it.</p>
+<h2>Changes</h2>
+<p>If this policy changes, the date at the top changes. Continuing to use the store means you accept the update.</p>
+<h2>Contact</h2>
+<p><a href="mailto:${esc(SUPPORT_EMAIL)}">${esc(SUPPORT_EMAIL)}</a> · <a href="/terms.html">Terms of service</a></p>` });
+
+const termsPage = (cats) => infoPage({ cats, path: '/terms.html', title: `Terms of service — ${SITE}`, h1: 'Terms of service', sub: `updated ${UPDATED}`,
+  desc: `Simple rules for using ${SITE}: accounts, reviews, downloads and developers.`,
+  inner: `<p>${SITE} is a web store where developers list apps and people discover and download them. By using it you agree to these terms. If you do not agree, please do not use the store.</p>
+<h2>Using the store</h2>
+<p>Browsing and downloading need no account and are free. Features may change or be removed at any time.</p>
+<h2>Accounts</h2>
+<ul><li>You can sign up with email or Google. An account is needed only to review apps.</li><li>Usernames are unique and cannot be changed after you pick them.</li><li>Your name, username, bio and reviews are public. Your email is not.</li><li>Keep your password safe. You are responsible for what happens in your account.</li><li>You can delete your account any time in Library, Settings.</li></ul>
+<h2>Reviews and conduct</h2>
+<p>One review per person per app. You can edit it later. Please do not:</p>
+<ul><li>Post spam, fake, abusive, hateful or illegal content.</li><li>Review your own app or ask others to inflate ratings.</li><li>Share other people's private information.</li><li>Try to break, overload or misuse the store.</li></ul>
+<p>We may remove reviews, apps or accounts that break these rules, without notice.</p>
+<h2>Downloads and developers</h2>
+<p>Apps are uploaded by independent developers. The developer, not ${SITE}, owns the app and is responsible for it and its download file.</p>
+<ul><li>We do not guarantee that an app is safe, working or accurately described.</li><li>Download only what you trust, and check the app's permissions and policy.</li><li>Developers must only upload apps they have the right to share, and no malware or misleading apps.</li><li>See a bad app? Use Report an app in Library, Settings.</li></ul>
+<h2>Disclaimer and liability</h2>
+<p>${SITE} is provided “as is”, without promise of being error-free or always available. To the extent the law allows, we are not responsible for loss or damage from using the store or from apps you download through it.</p>
+<h2>Changes and ending access</h2>
+<p>We may update these terms and the date at the top will change. Continuing to use the store means you accept them. We may suspend access for anyone who breaks the rules. You can stop using the store, or delete your account, at any time.</p>
+<h2>Contact</h2>
+<p><a href="mailto:${esc(SUPPORT_EMAIL)}">${esc(SUPPORT_EMAIL)}</a> · <a href="/privacy.html">Privacy policy</a></p>` });
+
 const founderPage = (cats) => infoPage({ cats, path: '/founder/', title: `About the Founder — Zishan, ZISHU TRON | ${SITE}`, h1: 'About Founder',
   desc: `Meet Zishan, the founder and developer behind ZISHU TRON and ${SITE}. Student, Android and web developer building useful technology products.`,
   inner: `<div class="card founder"><div class="avatar" aria-hidden="true">Z</div><div><h2>Zishan</h2><p class="muted">Founder &amp; Developer, ZISHU TRON</p></div></div>
@@ -731,6 +782,8 @@ async function main() {
     await write('about/index.html', aboutPage(cats));
     await write('support/index.html', supportPage(cats));
     await write('founder/index.html', founderPage(cats));
+    await write('privacy.html', privacyPage(cats));
+    await write('terms.html', termsPage(cats));
     await write('404.html', notFound(cats));
     await write('sitemap.xml', sitemap(listApps, cats));
     await write('rss.xml', rss(listApps));
