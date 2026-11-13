@@ -1,7 +1,7 @@
 {
-  "name": "ZishuTron Apps",
-  "short_name": "ZishuTron",
-  "description": "ZishuTron Apps is a free Android app store. Discover, review and download verified APKs of apps and games, updated every few minutes.",
+  "name": "UptoZishu",
+  "short_name": "UptoZishu",
+  "description": "UptoZishu is a free Android app store. Discover, review and download verified APKs of apps and games, updated every few minutes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -3,4 +3,4 @@ Allow: /
 Disallow: /search/
 Disallow: /library/
 
-Sitemap: https://zishutronapps.zishuai.cloud/sitemap.xml
+Sitemap: https://uptozishu.zishuai.cloud/sitemap.xml
