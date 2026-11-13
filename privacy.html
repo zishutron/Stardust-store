@@ -705,7 +705,7 @@
             </div>
             <h1>Privacy Policy</h1>
             <p>Your privacy matters. Learn how UptoZishu handles your data with transparency.</p>
-            <span class="hero-date">Last updated: 12 November 2026</span>
+            <span class="hero-date">Last updated: 13 November 2026</span>
         </div>
     </div>
 
@@ -751,11 +751,10 @@
         <h3>2.1 Information Stored Locally on Your Device</h3>
         <p>The following information is stored <strong>only on your device</strong> and is never transmitted to our servers:</p>
         <ul>
-            <li><strong>Profile Information</strong> — Display name, username, bio, and profile picture you set within the app.</li>
-            <li><strong>Wishlist</strong> — Apps you have added to your personal wishlist.</li>
-            <li><strong>Download History</strong> — Apps you have previously downloaded through the store.</li>
+            <li><strong>Saved Apps (Wishlist)</strong> — Apps you have saved on this device. Never visible to other users.</li>
+            <li><strong>Download History</strong> — Apps you have previously downloaded through the store. Never visible to other users.</li>
             <li><strong>Theme Preference</strong> — Whether you use Light or Dark mode.</li>
-            <li><strong>Review Logs</strong> — A local record of reviews you have submitted.</li>
+            <li><strong>Sign-in Session</strong> — A small token that keeps you signed in on this device until you sign out.</li>
         </ul>
         <p>You can clear this data at any time by clearing the app's storage in your device settings, or by uninstalling the application.</p>
 
@@ -779,12 +778,28 @@
                 </tr>
                 <tr>
                     <td>Reviews & Ratings</td>
-                    <td>Your submitted reviews and star ratings, published publicly with your chosen display name.</td>
+                    <td>Your submitted review and star rating, published publicly with your name and username. Each member can post one review per app.</td>
                 </tr>
             </tbody>
         </table>
 
-        <h3>2.3 Information We Do NOT Collect</h3>
+        <h3>2.3 Account and Public Profile Information</h3>
+        <p>Creating an account is optional and is only required to post reviews. When you create an account (with email and password, or with Google) we store:</p>
+        <table class="data-table">
+            <thead><tr><th>Data</th><th>Visibility</th></tr></thead>
+            <tbody>
+                <tr><td>Name, username and bio</td><td><strong>Public.</strong> Shown on your profile and next to your reviews. Other people can open your profile by tapping your picture or name on a review.</td></tr>
+                <tr><td>Username</td><td><strong>Public and unique.</strong> A username belongs to one account only, so nobody else can take it.</td></tr>
+                <tr><td>Profile picture</td><td><strong>Public.</strong> It is not an uploaded photo: it is the first letter of your name on a colour chosen automatically.</td></tr>
+                <tr><td>Email address</td><td><strong>Private.</strong> Used only to sign you in and to reset your password. It is never shown to other users.</td></tr>
+                <tr><td>Password</td><td><strong>Private.</strong> Handled by Firebase Authentication. We never see or store your password in readable form.</td></tr>
+                <tr><td>Reviews</td><td><strong>Public.</strong> Linked to your account so that only one review per app is possible.</td></tr>
+            </tbody>
+        </table>
+        <p>Your <strong>saved apps</strong> and <strong>download history</strong> stay on your device and are never shared with other users.</p>
+        <p>To correct or delete your account, profile or reviews, write to us from the <a href="/support/">support page</a> and we will remove them.</p>
+
+        <h3>2.4 Information We Do NOT Collect</h3>
         <div class="safe-box">
             <strong>We Never Collect</strong>
             <ul style="margin: 6px 0 0; padding-left: 18px;">
@@ -892,8 +907,8 @@
         <h3>5.3 APK Integrity</h3>
         <p>When available, we verify downloaded APK files against their published SHA-256 hashes to detect tampering or corruption.</p>
 
-        <h3>5.4 No User Accounts</h3>
-        <p>UptoZishu does not require account registration, passwords, or email addresses. There is nothing for us to protect because we simply do not collect it.</p>
+        <h3>5.4 User Accounts</h3>
+        <p>You can browse and download without an account. If you choose to create one, sign-in is handled by Firebase Authentication (including Google Sign-In). Passwords are never stored by UptoZishu in readable form, and your email address is never made public. Write access to your profile and review is limited to your own account by database security rules.</p>
 
         <div class="safe-box">
             <strong>Secure by Design</strong>
@@ -910,12 +925,15 @@
         <p>UptoZishu uses a small number of trusted third-party services to operate. Each service is described below:</p>
 
         <h3>6.1 Firebase Realtime Database</h3>
-        <p>Provided by Google. Used to store the app catalog (app names, descriptions, screenshots, download URLs) and user-submitted reviews and ratings. Data stored in Firebase is subject to <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</p>
+        <p>Provided by Google. Used to store the app catalog (app names, descriptions, screenshots, download URLs), member profiles (name, username, bio) and user-submitted reviews and ratings. Data stored in Firebase is subject to <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</p>
 
-        <h3>6.2 ImgBB</h3>
+        <h3>6.2 Firebase Authentication and Google Sign-In</h3>
+        <p>Provided by Google. Used to create accounts and sign you in with email and password or with your Google account. When you use Google Sign-In, Google shares your name and email address with us; see <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</p>
+
+        <h3>6.3 ImgBB</h3>
         <p>Used to host images that you optionally attach to app reviews. Images uploaded to ImgBB are subject to <a href="https://imgbb.com/privacy" target="_blank" rel="noopener">ImgBB's Privacy Policy</a>. You are never required to attach images to reviews.</p>
 
-        <h3>6.3 Android System Services</h3>
+        <h3>6.4 Android System Services</h3>
         <p>Downloads and APK installations are handled by Android's own system components. The Android Package Installer is invoked for all installations.</p>
 
         <div class="info-box">
