@@ -382,6 +382,7 @@ const ic = {
   help: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8M12 17h.01"/></svg>',
   info: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg>',
   out: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+  flag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-1.5 4L16 12H5"/></svg>',
   trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>'
 };
 const gear = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
@@ -436,13 +437,28 @@ function libraryPage(cats) {
         <li><button type="button" id="setEdit">${pencil}<span>Edit profile</span></button></li>
         <li><a href="/support/">${ic.help}<span>Customer support</span></a></li>
         <li><a href="/about/">${ic.info}<span>About</span></a></li>
+        <li><a href="/library/saved/">${svg.heart}<span>Saved apps</span></a></li>
+        <li><a href="/library/history/">${svg.download}<span>Download history</span></a></li>
+        <li><a href="/privacy.html">${ic.info}<span>Privacy policy</span></a></li>
+        <li><a href="/terms.html">${ic.info}<span>Terms of service</span></a></li>
+        <li><button type="button" id="setReport">${ic.flag}<span>Report an app</span></button></li>
         <li><button type="button" id="setOut">${ic.out}<span>Sign out</span></button></li>
         <li><button type="button" id="setDelete" class="danger">${ic.trash}<span>Delete account</span></button></li>
       </ul>
     </div>
+    <form class="form pf-report" id="pfReport" hidden novalidate>
+      <h3>Report an app</h3>
+      <p class="muted">Tell us if an app is broken, harmful or misleading. We review every report.</p>
+      <label>App<select name="app" required><option value="">Choose an app…</option></select></label>
+      <label>Reason<select name="reason"><option>Does not work / broken download</option><option>Malware or unsafe</option><option>Misleading or fake</option><option>Copyright or trademark</option><option>Inappropriate content</option><option>Other</option></select></label>
+      <label>Details<textarea name="details" rows="3" maxlength="500" placeholder="What is wrong with this app?"></textarea></label>
+      <div class="form-row"><button class="btn btn-primary" type="submit">Send report</button><button class="btn" id="repCancel" type="button">Cancel</button></div>
+      <p class="muted small" id="repMsg" role="status"></p>
+    </form>
     <form class="form pf-delete" id="pfDelete" hidden novalidate>
       <h3>Delete account</h3>
-      <p class="muted">This permanently deletes your profile, your username and all your reviews, and removes your login. It cannot be undone. Saved apps and download history on this device are not affected.</p>
+      <p class="muted">This permanently deletes your profile, your username, your reviews, your saved apps and download history, and removes your login. It cannot be undone.</p>
+      <p class="warn-box"><b>Developer console:</b> this same login is used for the UptoZishu developer console. If you have published apps there, you will lose access to them, and they will no longer be editable by you.</p>
       <label id="delPwWrap">Enter your password to confirm<input name="password" type="password" autocomplete="current-password"></label>
       <div class="form-row"><button class="btn btn-danger" type="submit">Delete my account</button><button class="btn" id="delCancel" type="button">Cancel</button></div>
       <p class="muted small" id="delMsg" role="status"></p>
@@ -457,12 +473,8 @@ function libraryPage(cats) {
     </form>
   </div>
 </section>
-<div class="pf-actions lib-links">
-  <a class="btn btn-ghost" href="/library/saved/">${svg.heart}<span>Saved apps</span><small id="savedCount"></small></a>
-  <a class="btn btn-ghost" href="/library/history/">${svg.download}<span>Download history</span><small id="historyCount"></small></a>
-</div>
 <p class="pf-legal lib-legal"><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></p>
-<p class="muted center small">Saved apps and download history are stored on this device only. Other people can never see them.</p>`;
+<p class="muted center small">Your saved apps and download history are private to your account.</p>`;
   return layout({ title: `My library — ${SITE}`, desc: 'Your account, saved apps and download history on UptoZishu.', path: '/library/', body, page: 'library', cats, noindex: true });
 }
 function userPage(cats) {
@@ -475,8 +487,8 @@ function librarySubPage({ cats, path, h1, what, inner }) {
   const body = `${crumbHtml([['/library/', 'Library'], [null, h1]])}<h1 class="page-title">${h1} <small>${what}</small></h1>${inner}`;
   return layout({ title: `${h1} — ${SITE}`, desc: `${h1} on UptoZishu.`, path, body, page: 'library', cats, noindex: true });
 }
-const savedPage = (cats) => librarySubPage({ cats, path: '/library/saved/', h1: 'Saved apps', what: 'apps you saved on this device', inner: '<div class="grid" id="saved"></div>' });
-const historyPage = (cats) => librarySubPage({ cats, path: '/library/history/', h1: 'Download history', what: 'apps you downloaded on this device',
+const savedPage = (cats) => librarySubPage({ cats, path: '/library/saved/', h1: 'Saved apps', what: 'your saved apps', inner: '<div class="grid" id="saved"></div>' });
+const historyPage = (cats) => librarySubPage({ cats, path: '/library/history/', h1: 'Download history', what: 'apps you downloaded',
   inner: '<div class="sec-h"><span></span><button class="linkbtn" id="clearHistory" type="button">Clear history</button></div><div class="grid" id="history"></div>' });
 
 
@@ -591,7 +603,6 @@ function appPage(a, apps, cats) {
   </section>
   ${shelf('You may also like', more)}
 </article>
-<div class="stickybar" id="stickyBar" hidden><img src="${esc(a.icon)}" width="40" height="40" alt=""><span><b>${esc(a.name)}</b><small>${esc(a.version)}${a.size ? ` · ${esc(a.size)}` : ''}</small></span>${a.downloadUrl ? `<a class="btn btn-primary" href="${esc(a.downloadUrl)}" target="_blank" rel="noopener nofollow" data-download data-id="${esc(a.id)}">Download</a>` : ''}</div>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview"><button class="lb-close" type="button" aria-label="Close preview">×</button><img alt=""></div>`;
 
   const ld = [{
