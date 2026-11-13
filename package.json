@@ -1,9 +1,9 @@
 {
-  "name": "zishutron-apps",
+  "name": "uptozishu",
   "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "ZishuTron Apps — pre-built Android app store",
+  "description": "UptoZishu — pre-built Android app store",
   "scripts": {
     "build": "node scripts/build-static.mjs",
     "serve": "npx --yes serve ."
