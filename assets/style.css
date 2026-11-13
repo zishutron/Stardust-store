@@ -340,3 +340,19 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 .tbl th{background:var(--soft);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .tbl tr:last-child td{border-bottom:0}
+
+.rev{position:relative}
+.rev header{padding-right:34px}
+.rv-more{position:absolute;top:8px;right:8px;width:34px;height:34px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;color:var(--muted)}
+.rv-more:active,.rv-more[aria-expanded=true]{background:color-mix(in srgb,var(--text) 10%,transparent)}
+.rv-more svg{width:20px;height:20px;fill:currentColor}
+.rv-menu{position:absolute;top:44px;right:10px;min-width:160px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px;z-index:20}
+.rv-menu[hidden]{display:none}
+.rv-menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:11px 12px;font-size:15px;font-weight:600;color:var(--text)}
+.rv-menu button:active{background:var(--soft)}
+.rv-menu .danger{color:#dc2626}
+.rv-edit{margin-top:8px}
+.rv-edit textarea{width:100%;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit;resize:vertical;box-sizing:border-box}
+.rv-edit .form-row,.rv-confirm .form-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.rv-confirm{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.rv-confirm p{margin:0;font-weight:600}

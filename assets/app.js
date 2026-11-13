@@ -466,6 +466,7 @@
     $('.stars', rv).textContent = '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating);
     $('p', rv).textContent = r.text;
     if (r.username) { var a = document.createElement('a'); a.className = 'rv-who'; a.href = '/u/?u=' + encodeURIComponent(r.username); while (rv.firstChild.firstChild) a.appendChild(rv.firstChild.firstChild); rv.firstChild.appendChild(a); }
+    if (r.uid && me() && r.uid === me().uid) attachMenu(rv);
     return rv;
   }
   function fmtN(n) { return n < 1000 ? String(n) : n < 1e6 ? (n / 1e3).toFixed(n < 1e4 ? 1 : 0).replace(/\.0$/, '') + 'K' : (n / 1e6).toFixed(n < 1e7 ? 1 : 0).replace(/\.0$/, '') + 'M'; }
@@ -481,8 +482,19 @@
     if (el && all[id]) { if (all[id].base === (+el.dataset.dl || 0)) el.textContent = fmtN(all[id].base + all[id].add); else { delete all[id]; store.set('zt_dl', all); } }
     var mine = store.get('zt_my_rev', {}), mr = mine[id], list = $('#revList');
     if (Array.isArray(mr)) mr = mr[mr.length - 1]; // older format
+    var dels = store.get('zt_del_rev', {});
+    if (dels[id] && list) { // I deleted my review but the built page may still show it
+      var old = $$('.rev[data-uid="' + dels[id] + '"]', list);
+      if (old.length) { old.forEach(function (x) { x.remove(); }); showNoRev(); } else { delete dels[id]; store.set('zt_del_rev', dels); }
+      return;
+    }
     if (!mr || !list) return;
-    if (list.querySelector('.rev[data-ts="' + mr.ts + '"]')) { delete mine[id]; store.set('zt_my_rev', mine); return; } // the build already has it
+    var built = list.querySelector('.rev[data-ts="' + mr.ts + '"]');
+    if (built && mr.edit) { // I edited my review: show the new text until the build catches up
+      if ($('p', built).textContent === mr.text && ($('.stars', built).textContent.match(/★/g) || []).length === mr.rating) { delete mine[id]; store.set('zt_my_rev', mine); } else applyEdit(built, mr);
+      return;
+    }
+    if (built) { delete mine[id]; store.set('zt_my_rev', mine); return; } // the build already has it
     $$('.rev[data-uid="' + mr.uid + '"]', list).forEach(function (x) { x.remove(); }); // my older version
     var none = $('#noRev'); if (none) none.remove();
     list.insertBefore(revEl(mr), list.firstChild);
@@ -499,6 +511,94 @@
     // per-day counter (IST day) so the developer console can draw real download charts
     try { var day = new Date(Date.now() + 19800000).toISOString().slice(0, 10); fetch(DB + '/stats/' + encodeURIComponent(id) + '/' + day + '.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: 1 } }) }).catch(function () { }); } catch (err) { /* ignore */ }
   });
+
+  // ---- my own review: ⋮ menu with Edit / Delete ----
+  function showNoRev() {
+    var list = $('#revList'); if (!list || list.querySelector('.rev') || $('#noRev')) return;
+    var p = document.createElement('p'); p.className = 'muted'; p.id = 'noRev'; p.textContent = 'No reviews yet. Be the first to review this app.'; list.appendChild(p);
+  }
+  function recount() {
+    return dbReq('GET', 'reviews/' + encodeURIComponent(id)).then(function (all) {
+      var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object'; });
+      var avg = rs.length ? Math.round(rs.reduce(function (t, r) { return t + (+r.rating || 5); }, 0) / rs.length * 10) / 10 : 0;
+      return dbReq('PUT', 'apps/' + encodeURIComponent(id) + '/reviewCount', rs.length).then(function () { return dbReq('PUT', 'apps/' + encodeURIComponent(id) + '/rating', avg); });
+    }).catch(function () { });
+  }
+  function applyEdit(el, r) {
+    $('p', el).textContent = r.text;
+    $('.stars', el).textContent = '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating);
+    var t = $('time', el); if (t && !/edited/i.test(t.textContent)) t.textContent += ' · Edited';
+  }
+  function closeMenus() { $$('.rv-menu').forEach(function (x) { x.hidden = true; }); $$('.rv-more[aria-expanded=true]').forEach(function (x) { x.setAttribute('aria-expanded', 'false'); }); }
+  document.addEventListener('click', closeMenus);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenus(); });
+  function attachMenu(el) {
+    if (!el || el.querySelector('.rv-more')) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'rv-more'; b.setAttribute('aria-label', 'Review options'); b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false');
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>';
+    var m = document.createElement('div'); m.className = 'rv-menu'; m.hidden = true; m.setAttribute('role', 'menu');
+    m.innerHTML = '<button type="button" role="menuitem" data-a="edit">Edit review</button><button type="button" role="menuitem" data-a="del" class="danger">Delete review</button>';
+    el.appendChild(b); el.appendChild(m);
+    b.addEventListener('click', function (e) { e.stopPropagation(); var open = m.hidden; closeMenus(); m.hidden = !open; b.setAttribute('aria-expanded', String(open)); });
+    m.addEventListener('click', function (e) { var a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'edit') startEdit(el); else askDelete(el); });
+  }
+  function myToken() {
+    return authUser().then(function (user) {
+      if (!user) { setMe(null); throw new Error('signin'); }
+      return user.getIdToken().then(function (tok) { return { uid: user.uid, tok: tok }; });
+    });
+  }
+  function startEdit(el) {
+    if (el.querySelector('.rv-edit')) return;
+    var p = $('p', el), rate = ($('.stars', el).textContent.match(/★/g) || []).length || 5;
+    var f = document.createElement('form'); f.className = 'rv-edit'; f.noValidate = true;
+    f.innerHTML = '<div class="starpick" role="radiogroup" aria-label="Your rating">' + [1, 2, 3, 4, 5].map(function (n) { return '<button type="button" role="radio" data-s="' + n + '" aria-label="' + n + ' star' + (n > 1 ? 's' : '') + '">★</button>'; }).join('') + '</div><textarea rows="3" maxlength="500" aria-label="Edit your review"></textarea><div class="form-row"><button class="btn btn-primary" type="submit">Save</button><button class="btn btn-ghost" type="button" data-x>Cancel</button><span class="muted" role="status"></span></div>';
+    var ta = $('textarea', f), msg = $('.muted', f), pk = $$('.starpick button', f);
+    ta.value = p.textContent;
+    function paint() { pk.forEach(function (x) { var on = +x.dataset.s <= rate; x.classList.toggle('on', on); x.setAttribute('aria-checked', +x.dataset.s === rate); }); }
+    pk.forEach(function (x) { x.addEventListener('click', function () { rate = +x.dataset.s; paint(); }); }); paint();
+    p.hidden = true; $('.rv-meta', el).hidden = true; el.insertBefore(f, p.nextSibling); ta.focus();
+    function close() { f.remove(); p.hidden = false; $('.rv-meta', el).hidden = false; }
+    $('[data-x]', f).addEventListener('click', close);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = ta.value.trim(); if (text.length < 3) { msg.textContent = 'Please write a short review.'; return; }
+      var sv = $('button[type=submit]', f); sv.disabled = true; msg.textContent = 'Saving…';
+      myToken().then(function (u) {
+        return dbReq('PATCH', 'reviews/' + encodeURIComponent(id) + '/' + u.uid, { text: text, rating: rate }, u.tok).then(function () { return recount(); }).then(function () { return u; });
+      }).then(function (u) {
+        var r = { ts: el.dataset.ts, uid: u.uid, author: ($('b', el) || {}).textContent || '', username: (me() || {}).username, text: text, rating: rate, edit: true };
+        var mine = store.get('zt_my_rev', {}); mine[id] = r; store.set('zt_my_rev', mine);
+        close(); applyEdit(el, r); toast('Review updated');
+      }).catch(function (err) {
+        sv.disabled = false; msg.textContent = err && err.message === 'signin' ? 'Please sign in again.' : 'Could not save. Please try again.';
+      });
+    });
+  }
+  function askDelete(el) {
+    closeMenus();
+    if (el.querySelector('.rv-confirm')) return;
+    var c = document.createElement('div'); c.className = 'rv-confirm'; c.setAttribute('role', 'alertdialog');
+    c.innerHTML = '<p>Delete your review? This cannot be undone.</p><div class="form-row"><button class="btn btn-danger" type="button" data-y>Delete</button><button class="btn btn-ghost" type="button" data-n>Cancel</button><span class="muted" role="status"></span></div>';
+    el.appendChild(c);
+    $('[data-n]', c).addEventListener('click', function () { c.remove(); });
+    $('[data-y]', c).addEventListener('click', function () {
+      var y = this, msg = $('.muted', c); y.disabled = true; msg.textContent = 'Deleting…';
+      myToken().then(function (u) {
+        return dbReq('DELETE', 'reviews/' + encodeURIComponent(id) + '/' + u.uid, undefined, u.tok).then(function () { return recount(); }).then(function () { return u; });
+      }).then(function (u) {
+        var dels = store.get('zt_del_rev', {}); dels[id] = u.uid; store.set('zt_del_rev', dels);
+        var mine = store.get('zt_my_rev', {}); delete mine[id]; store.set('zt_my_rev', mine);
+        el.remove(); showNoRev(); toast('Review deleted');
+      }).catch(function (err) {
+        y.disabled = false; msg.textContent = err && err.message === 'signin' ? 'Please sign in again.' : 'Could not delete. Please try again.';
+      });
+    });
+  }
+  (function ownMenus() {
+    var m = me(); if (!m || !store.get('zt_uid', '')) return;
+    $$('#revList .rev[data-uid="' + m.uid + '"]').forEach(attachMenu);
+  })();
 
   // reviews: only for signed-in members, one review per person per app (the review is stored under the member's uid)
   var form = $('#revForm'), gate = $('#revGate'), rating = 5;
