@@ -473,8 +473,12 @@ function libraryPage(cats) {
     </form>
   </div>
 </section>
+<div class="pf-actions lib-links">
+  <a class="btn btn-ghost" href="/library/saved/">${svg.heart}<span>Saved apps</span><small id="savedCount"></small></a>
+  <a class="btn btn-ghost" href="/library/history/">${svg.download}<span>Download history</span><small id="historyCount"></small></a>
+</div>
 <p class="pf-legal lib-legal"><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></p>
-<p class="muted center small">Your saved apps and download history are private to your account.</p>`;
+<p class="muted center small">Saved apps and download history are stored on this phone only. Other people can never see them.</p>`;
   return layout({ title: `My library — ${SITE}`, desc: 'Your account, saved apps and download history on UptoZishu.', path: '/library/', body, page: 'library', cats, noindex: true });
 }
 function userPage(cats) {
