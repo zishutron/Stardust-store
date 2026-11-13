@@ -331,3 +331,7 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .gate-card{display:grid;gap:10px;justify-items:start;padding:18px}
 .gate-card p{margin:0}
 .pf-report select,.pf-report textarea{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:10px 12px;color:var(--text)}
+
+.lockfield{position:relative;display:block}
+.lockfield input{padding-right:42px;color:var(--muted);cursor:not-allowed}
+.lockfield svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
