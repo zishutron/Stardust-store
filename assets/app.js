@@ -212,6 +212,8 @@
     var h = store.get('zt_history', []).filter(function (x) { return x.id !== id; }); h.unshift({ id: id, t: Date.now() }); store.set('zt_history', h.slice(0, 50));
     if (Date.now() - lastHit < 5000) return; lastHit = Date.now();
     try { fetch(DB + '/apps/' + encodeURIComponent(id) + '/downloadCount.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: 1 } }) }).catch(function () { }); } catch (err) { /* ignore */ }
+    // per-day counter (IST day) so the developer console can draw real download charts
+    try { var day = new Date(Date.now() + 19800000).toISOString().slice(0, 10); fetch(DB + '/stats/' + encodeURIComponent(id) + '/' + day + '.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: 1 } }) }).catch(function () { }); } catch (err) { /* ignore */ }
   });
 
   // sticky download bar once the main button scrolls away (mobile)
