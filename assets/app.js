@@ -1,4 +1,4 @@
-/* ZishuTron Apps — shared client script.
+/* UptoZishu — shared client script.
  * The store itself is pre-built static HTML. Firebase is only touched (via tiny REST calls,
  * no SDK) when the visitor downloads an app or posts a review. */
 (function () {
@@ -200,7 +200,7 @@
   // share
   var shareBtn = $('#shareBtn');
   if (shareBtn) shareBtn.addEventListener('click', function () {
-    var data = { title: app.dataset.name + ' — ZishuTron Apps', url: location.origin + location.pathname };
+    var data = { title: app.dataset.name + ' — UptoZishu', url: location.origin + location.pathname };
     if (navigator.share) navigator.share(data).catch(function () { });
     else if (navigator.clipboard) navigator.clipboard.writeText(data.url).then(function () { toast('Link copied'); });
   });
