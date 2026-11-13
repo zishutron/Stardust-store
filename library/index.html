@@ -116,7 +116,7 @@
     <form class="pf-edit form" id="pfForm" hidden>
       <h3>Edit profile</h3>
       <label>Name<input name="name" maxlength="40" autocomplete="name"></label>
-      <label>Username<input name="username" disabled></label>
+      <label>Username<span class="lockfield"><input name="username" disabled aria-describedby="unLockNote"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><small id="unLockNote">Your username is locked and cannot be changed.</small></label>
       <label>Bio<textarea name="bio" rows="3" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
       <div class="form-row"><button class="btn btn-primary" type="submit">Save</button><button class="btn" id="pfCancel" type="button">Cancel</button></div>
       <p class="muted small" id="pfMsg" role="status"></p>
