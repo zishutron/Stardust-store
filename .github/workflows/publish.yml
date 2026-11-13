@@ -1,4 +1,4 @@
-name: Publish ZishuTron Apps
+name: Publish UptoZishu
 
 on:
   workflow_dispatch:
