@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ZISHUTRON APPS — static site builder
+ * UPTOZISHU — static site builder
  *
  * Runs in GitHub Actions every 10 minutes (and on every push):
  *  1. Reads all LIVE apps (+ reviews) from Firebase Realtime Database (REST, no SDK)
@@ -29,21 +29,21 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // ---------------------------------------------------------------- config
 const env = (k, d = '') => (process.env[k] || d).trim();
 const DB = env('STORE_DB_URL', 'https://stardust-store-default-rtdb.firebaseio.com').replace(/\/+$/, '');
-const BASE = env('SITE_BASE_URL', 'https://zishutronapps.zishuai.cloud').replace(/\/+$/, '');
+const BASE = env('SITE_BASE_URL', 'https://uptozishu.zishuai.cloud').replace(/\/+$/, '');
 const MAIN_URL = env('MAIN_SITE_URL', 'https://zishutron.zishuai.cloud').replace(/\/+$/, '');
 const FOUNDER_PROFILE = `${MAIN_URL}/developer`;
 const SOCIALS = [
   ['GitHub', 'https://github.com/zishutron'], ['Discord', 'https://discord.gg/Xhh5r2UM5C'], ['X (Twitter)', 'https://x.com/zishanstardust'],
   ['YouTube', 'https://youtube.com/@zishutron'], ['LinkedIn', 'https://www.linkedin.com/in/zishutron']
 ];
-const CONSOLE_URL = env('DEV_CONSOLE_URL', 'https://dev-zishutronapps.zishuai.cloud'); // "For developers" link in the footer
+const CONSOLE_URL = env('DEV_CONSOLE_URL', 'https://dev.uptozishu.zishuai.cloud'); // "For developers" link in the footer
 const SUPPORT_EMAIL = env('SUPPORT_EMAIL', 'support.stardustofficial@gmail.com');
 const APPS_FILE = env('APPS_FILE');       // local test fixture (skips Firebase)
 const REVIEWS_FILE = env('REVIEWS_FILE'); // local test fixture
 
-const SITE = 'ZishuTron Apps';
+const SITE = 'UptoZishu';
 const TAGLINE = 'Free Android apps & games, safe APK downloads';
-const SITE_DESC = 'ZishuTron Apps is a free Android app store. Discover, review and download verified APKs of apps and games, updated every few minutes.';
+const SITE_DESC = 'UptoZishu is a free Android app store. Discover, review and download verified APKs of apps and games, updated every few minutes.';
 const FALLBACK_ICON = '/favicon.png';
 const MAX_REVIEWS_BAKED = 15;
 
@@ -209,8 +209,8 @@ function buildCollections(apps) {
   const editors = verified.length ? verified : [...apps].filter((a) => a.banner && a.rc > 0).sort(byRate);
   return [
     { key: 'discover', path: '/discover/', name: 'Discover', apps: discover, title: 'Discover New Android Apps & Games', intro: `A fresh mix of the best apps and games from every category on ${SITE}.` },
-    { key: 'popular-apps', path: '/popular-apps/', name: 'Popular Apps', apps: pop.filter((a) => a.catSlug !== 'games'), title: 'Popular Android Apps — Most Downloaded', intro: 'The most downloaded Android apps on ZishuTron Apps.' },
-    { key: 'popular-games', path: '/popular-games/', name: 'Popular games', apps: pop.filter((a) => a.catSlug === 'games'), title: 'Popular Android Games — Most Downloaded', intro: 'The most downloaded Android games on ZishuTron Apps.' },
+    { key: 'popular-apps', path: '/popular-apps/', name: 'Popular Apps', apps: pop.filter((a) => a.catSlug !== 'games'), title: 'Popular Android Apps — Most Downloaded', intro: 'The most downloaded Android apps on UptoZishu.' },
+    { key: 'popular-games', path: '/popular-games/', name: 'Popular games', apps: pop.filter((a) => a.catSlug === 'games'), title: 'Popular Android Games — Most Downloaded', intro: 'The most downloaded Android games on UptoZishu.' },
     { key: 'editors-choice', path: '/editors-choice/', name: 'Editor’s choice', apps: editors, title: 'Editor’s Choice — Hand-picked Android Apps', intro: 'Verified and top rated apps our team recommends.' }
   ].filter((c) => c.apps.length);
 }
@@ -259,7 +259,7 @@ ${head}${ld.map(jsonLd).join('\n')}
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="wrap hdr-in">
-    <a class="brand" href="/" aria-label="${SITE} home"><img src="/favicon.png" width="34" height="34" alt=""><span>ZishuTron <b>Apps</b></span></a>
+    <a class="brand" href="/" aria-label="${SITE} home"><img src="/favicon.png" width="34" height="34" alt=""><span>Upto<b>Zishu</b></span></a>
     <nav class="nav" aria-label="Main">${nav('/', 'Home', 'home')}${nav('/apps/', 'Apps', 'apps')}${nav('/top/', 'Top charts', 'top')}${nav('/library/', 'Library', 'library')}</nav>
     <form class="search" role="search" action="/search/" method="get">
       <input type="search" name="q" placeholder="Search apps…" autocomplete="off" aria-label="Search apps" enterkeyhint="search">
@@ -276,7 +276,7 @@ ${body}
 <footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
-      <div class="foot-brand"><a class="brand" href="/"><img src="/favicon.png" width="30" height="30" alt=""><span>ZishuTron <b>Apps</b></span></a>
+      <div class="foot-brand"><a class="brand" href="/"><img src="/favicon.png" width="30" height="30" alt=""><span>Upto<b>Zishu</b></span></a>
         <p>${esc(TAGLINE)}. Every app is published by its developer and listed with its version, size and requirements.</p></div>
       <div><h3>Explore</h3><a href="/apps/">All apps</a><a href="/top/">Top charts</a><a href="/library/">My library</a><a href="/rss.xml">RSS feed</a></div>
       <div><h3>Company</h3><a href="${esc(MAIN_URL)}/">ZISHU TRON</a><a href="/about/">About</a><a href="/founder/">About Founder</a><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></div>
@@ -353,7 +353,7 @@ function topPage(apps, cats) {
   const body = `${crumbHtml([['/', 'Home'], [null, 'Top charts']])}<h1 class="page-title">Top charts <small>ranked by real downloads and ratings</small></h1>
 <div class="chips"><a class="chip" href="#downloads">Most downloaded</a><a class="chip" href="#rated">Top rated</a><a class="chip" href="#new">New</a><a class="chip" href="#updated">Recently updated</a></div>
 ${ranked('Most downloaded', 'downloads', [...apps].sort(byDl))}${ranked('Top rated', 'rated', rated)}${ranked('New releases', 'new', [...apps].sort(byNew))}${ranked('Recently updated', 'updated', [...apps].sort(byUpd))}`;
-  return layout({ title: `Top Android Apps & Games — Top Charts | ${SITE}`, desc: 'The most downloaded, top rated, newest and recently updated Android apps and games on ZishuTron Apps.', path: '/top/', body, page: 'top', cats,
+  return layout({ title: `Top Android Apps & Games — Top Charts | ${SITE}`, desc: 'The most downloaded, top rated, newest and recently updated Android apps and games on UptoZishu.', path: '/top/', body, page: 'top', cats,
     ld: [crumbLd([['/', 'Home'], [null, 'Top charts']])] });
 }
 
@@ -364,7 +364,7 @@ function searchPage(apps, cats) {
 <p class="muted" id="count" aria-live="polite"></p>
 <div class="grid" id="results"></div>
 <div id="fallback">${rowsSection('Popular apps', [...apps].sort(byDl).slice(0, 12))}</div>`;
-  return layout({ title: `Search apps — ${SITE}`, desc: 'Search every app and game on ZishuTron Apps.', path: '/search/', body, page: 'search', cats, noindex: true });
+  return layout({ title: `Search apps — ${SITE}`, desc: 'Search every app and game on UptoZishu.', path: '/search/', body, page: 'search', cats, noindex: true });
 }
 
 const pencil = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
@@ -391,11 +391,11 @@ function libraryPage(cats) {
   </form>
 </section>
 <p class="muted center">Your profile and library are stored on this device only.</p>`;
-  return layout({ title: `My library — ${SITE}`, desc: 'Your profile, saved apps and download history on ZishuTron Apps.', path: '/library/', body, page: 'library', cats, noindex: true });
+  return layout({ title: `My library — ${SITE}`, desc: 'Your profile, saved apps and download history on UptoZishu.', path: '/library/', body, page: 'library', cats, noindex: true });
 }
 function librarySubPage({ cats, path, h1, what, inner }) {
   const body = `${crumbHtml([['/library/', 'Library'], [null, h1]])}<h1 class="page-title">${h1} <small>${what}</small></h1>${inner}`;
-  return layout({ title: `${h1} — ${SITE}`, desc: `${h1} on ZishuTron Apps.`, path, body, page: 'library', cats, noindex: true });
+  return layout({ title: `${h1} — ${SITE}`, desc: `${h1} on UptoZishu.`, path, body, page: 'library', cats, noindex: true });
 }
 const savedPage = (cats) => librarySubPage({ cats, path: '/library/saved/', h1: 'Saved apps', what: 'apps you saved on this device', inner: '<div class="grid" id="saved"></div>' });
 const historyPage = (cats) => librarySubPage({ cats, path: '/library/history/', h1: 'Download history', what: 'apps you downloaded on this device',
@@ -550,7 +550,7 @@ function rss(apps) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n  <channel>\n    <title>${SITE}</title>\n    <link>${BASE}/</link>\n    <description>${escXml(SITE_DESC)}</description>\n    <language>en</language>\n    <lastBuildDate>${lbd}</lastBuildDate>\n    <atom:link href="${BASE}/rss.xml" rel="self" type="application/rss+xml"/>\n${items}\n  </channel>\n</rss>\n`;
 }
 const robots = () => `User-agent: *\nAllow: /\nDisallow: /search/\nDisallow: /library/\n\nSitemap: ${BASE}/sitemap.xml\n`;
-const manifest = () => JSON.stringify({ name: SITE, short_name: 'ZishuTron', description: SITE_DESC, start_url: '/', scope: '/', display: 'standalone',
+const manifest = () => JSON.stringify({ name: SITE, short_name: 'UptoZishu', description: SITE_DESC, start_url: '/', scope: '/', display: 'standalone',
   background_color: '#f6f7fb', theme_color: '#2563eb', icons: [{ src: '/favicon.png', sizes: '256x256', type: 'image/png', purpose: 'any' }] }, null, 2);
 
 // ---------------------------------------------------------------- main
