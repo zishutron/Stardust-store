@@ -134,14 +134,16 @@
   function setMe(p, uid) { if (p) { store.set('zt_profile', { uid: uid || p.uid, name: p.name, username: p.username, bio: p.bio || '' }); store.set('zt_uid', uid || p.uid); } else { store.set('zt_profile', null); store.set('zt_uid', ''); } if (p) migrateLocal(uid || p.uid); }
   // lists saved before accounts existed (plain arrays) move into the member's own lists once
   function migrateLocal(u) {
-    var s = store.get('zt_saved', null), h = store.get('zt_history', null); if (!s && !h) return;
+    var s = store.get('zt_saved', null), h = store.get('zt_history', null), gs = store.get('zt_saved_', null), gh = store.get('zt_hist_', null);
+    if (!s && !h && !gs && !gh) return;
     var sm = store.get('zt_saved_' + u, {}), hm = store.get('zt_hist_' + u, {}), t = Date.now();
+    Object.keys(gs || {}).forEach(function (id) { if (!sm[id]) sm[id] = gs[id]; }); Object.keys(gh || {}).forEach(function (id) { if (!hm[id]) hm[id] = gh[id]; });
     (Array.isArray(s) ? s : []).forEach(function (id, i) { if (!sm[id]) sm[id] = t - i; });
     (Array.isArray(h) ? h : []).forEach(function (x) { if (x && x.id && !hm[x.id]) hm[x.id] = x.t || t; });
     store.set('zt_saved_' + u, sm); store.set('zt_hist_' + u, hm);
-    try { localStorage.removeItem('zt_saved'); localStorage.removeItem('zt_history'); } catch (e) { /* ignore */ }
+    try { ['zt_saved', 'zt_history', 'zt_saved_', 'zt_hist_'].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) { /* ignore */ }
   }
-  // saved apps + download history: kept on this phone only (never uploaded), separate for each signed-in member
+  // saved apps + download history: kept on this phone only (never uploaded). Visitors have their own list; each signed-in member gets a separate one
   function signed() { return !!(me() && store.get('zt_uid', '')); }
   function cloud() { var u = store.get('zt_uid', ''); return { uid: u, saved: store.get('zt_saved_' + u, {}), history: store.get('zt_hist_' + u, {}) }; }
   function putCloud(c) { store.set('zt_saved_' + c.uid, c.saved); store.set('zt_hist_' + c.uid, c.history); }
@@ -152,7 +154,9 @@
   /* ---------- library: account card, saved apps, download history ---------- */
   var acct = $('#acct');
   if (acct) {
-    var resetPanel = function () { };
+    var paintCounts = function () { var c = cloud(); $('#savedCount').textContent = Object.keys(c.saved).length || ''; $('#historyCount').textContent = Object.keys(c.history).length || ''; };
+    var resetPanel = function () { paintCounts(); };
+    paintCounts();
     var show = function (which) { ['acctLoading', 'acctOut', 'acctComplete', 'acctProfile'].forEach(function (x) { $('#' + x).hidden = x !== which; }); if (which === 'acctProfile') resetPanel(); };
     var paintProfile = function (p, email) {
       var av = $('#pfAvatar'); av.textContent = (p.name.trim().charAt(0) || 'G').toUpperCase(); av.className = 'avatar ' + avc(p.username || p.name);
@@ -383,10 +387,7 @@
   if (saved || hist) {
     var box = saved || hist, fmtD = function (t) { try { return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
     var ch = $('#clearHistory');
-    if (!signed()) {
-      box.innerHTML = '<div class="card gate-card"><h3>Sign in to see this</h3><p class="muted">' + (saved ? 'Your saved apps' : 'Your download history') + ' are kept privately on this phone for your account.</p><a class="btn btn-primary" href="/library/?next=' + encodeURIComponent(location.pathname) + '">Sign in</a></div>';
-      if (ch) ch.hidden = true;
-    } else {
+    {
       var render = function (c, apps) {
         var byId = {}; apps.forEach(function (a) { byId[a.id] = a; });
         var map = saved ? c.saved : c.history;
@@ -432,16 +433,15 @@
   window.addEventListener('popstate', function () { closeLb(true); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLb(); });
 
-  // save to library (members only; stored on this phone)
+  // save to library (stored on this phone)
   var saveBtn = $('#saveBtn');
   function paintSave() {
-    var on = !!(signed() && cloud().saved[id]);
+    var on = !!cloud().saved[id];
     saveBtn.setAttribute('aria-pressed', on); $('span', saveBtn).textContent = on ? 'Saved' : 'Save';
   }
   if (saveBtn) {
     paintSave();
     saveBtn.addEventListener('click', function () {
-      if (!signed()) { needSignIn('Sign in to save apps'); return; }
       var c = cloud();
       if (c.saved[id]) delete c.saved[id]; else c.saved[id] = Date.now();
       putCloud(c); paintSave();
@@ -491,7 +491,7 @@
   var lastHit = 0;
   document.addEventListener('click', function (e) {
     var a = e.target.closest('[data-download]'); if (!a) return;
-    if (signed()) { var cc = cloud(); cc.history[id] = Date.now(); putCloud(cc); }
+    var cc = cloud(); cc.history[id] = Date.now(); putCloud(cc);
     if (Date.now() - lastHit < 5000) return; lastHit = Date.now();
     bumpDl(1);
     try { fetch(DB + '/apps/' + encodeURIComponent(id) + '/downloadCount.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: 1 } }) }).catch(function () { }); } catch (err) { /* ignore */ }
