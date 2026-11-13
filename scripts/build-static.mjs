@@ -452,9 +452,10 @@ function appPage(a, apps, cats) {
   const dist = [0, 0, 0, 0, 0]; a.reviews.forEach((r) => { dist[r.rating - 1]++; });
   const total = a.reviews.length;
   const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
-  const revHtml = a.reviews.slice(0, MAX_REVIEWS_BAKED).map((r) => `<article class="rev" data-ts="${r.ts}"><header><b>${esc(r.author)}</b><span class="stars" aria-label="${r.rating} out of 5">${stars(r.rating)}</span></header>
+  const revHtml = a.reviews.slice(0, MAX_REVIEWS_BAKED).map((r) => `<article class="rev" data-ts="${r.ts}"><header><span class="rv-av" aria-hidden="true">${esc((r.author.trim().charAt(0) || 'G').toUpperCase())}</span><b>${esc(r.author)}</b></header>
+    <div class="rv-meta"><span class="stars" aria-label="${r.rating} out of 5">${stars(r.rating)}</span><time>${dateFmt(r.ts)}</time></div>
     <p>${esc(r.text)}</p>${r.images.length ? `<div class="rev-img">${r.images.map((u) => `<img src="${esc(u)}" height="56" loading="lazy" alt="Review screenshot" data-zoom>`).join('')}</div>` : ''}
-    <footer>${dateFmt(r.ts)}</footer>${r.reply ? `<div class="reply"><b>Developer reply</b><p>${esc(r.reply)}</p></div>` : ''}</article>`).join('');
+    ${r.reply ? `<div class="reply"><b>Developer reply</b><p>${esc(r.reply)}</p></div>` : ''}</article>`).join('');
   const info = [
     ['Package', a.pkg], ['Version', a.version], ['Size', a.size], ['Category', `<a href="/category/${a.catSlug}/">${esc(a.catRaw)}</a>`, true],
     ['Requires', `Android ${a.minAndroid}+`], ['Updated', dateFmt(a.updatedTs)], ['Released', dateFmt(a.ts)], ['Downloads', a.dl.toLocaleString('en-US')],
