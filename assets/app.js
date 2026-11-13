@@ -206,6 +206,15 @@
   });
 
   // The page is rebuilt every few minutes; until then show this visitor's own download/review right away
+  function revEl(r) {
+    var rv = document.createElement('article'); rv.className = 'rev'; rv.dataset.ts = r.ts;
+    rv.innerHTML = '<header><span class="rv-av" aria-hidden="true"></span><b></b></header><div class="rv-meta"><span class="stars"></span><time>Just now</time></div><p></p>';
+    $('.rv-av', rv).textContent = (String(r.author).trim().charAt(0) || 'G').toUpperCase();
+    $('b', rv).textContent = r.author;
+    $('.stars', rv).textContent = '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating);
+    $('p', rv).textContent = r.text;
+    return rv;
+  }
   function fmtN(n) { return n < 1000 ? String(n) : n < 1e6 ? (n / 1e3).toFixed(n < 1e4 ? 1 : 0).replace(/\.0$/, '') + 'K' : (n / 1e6).toFixed(n < 1e7 ? 1 : 0).replace(/\.0$/, '') + 'M'; }
   function bumpDl(add) {
     var el = $('#dlCount'); if (!el) return;
@@ -217,14 +226,15 @@
   (function showPending() {
     var el = $('#dlCount'), all = store.get('zt_dl', {});
     if (el && all[id]) { if (all[id].base === (+el.dataset.dl || 0)) el.textContent = fmtN(all[id].base + all[id].add); else { delete all[id]; store.set('zt_dl', all); } }
-    var mine = store.get('zt_my_rev', {}), r = mine[id], list = $('#revList');
-    if (!r || !list) return;
-    if (list.querySelector('.rev[data-ts="' + r.ts + '"]')) { delete mine[id]; store.set('zt_my_rev', mine); return; } // the build already has it
+    var mine = store.get('zt_my_rev', {}), mr = mine[id], list = $('#revList');
+    if (!mr || !list) return;
+    var arr = Array.isArray(mr) ? mr : [mr];
+    arr = arr.filter(function (r) { return !list.querySelector('.rev[data-ts="' + r.ts + '"]'); }); // drop the ones the build already has
+    if (arr.length) mine[id] = arr; else delete mine[id];
+    store.set('zt_my_rev', mine);
+    if (!arr.length) return;
     var none = $('#noRev'); if (none) none.remove();
-    var rv = document.createElement('article'); rv.className = 'rev'; rv.dataset.ts = r.ts;
-    rv.innerHTML = '<header><b></b><span class="stars"></span></header><p></p><footer>Just now · will show for everyone after the next update</footer>';
-    $('b', rv).textContent = r.author; $('.stars', rv).textContent = '★★★★★'.slice(0, r.rating) + '☆☆☆☆☆'.slice(0, 5 - r.rating); $('p', rv).textContent = r.text;
-    list.insertBefore(rv, list.firstChild);
+    arr.forEach(function (r) { list.insertBefore(revEl(r), list.firstChild); });
   })();
 
   // download counter: one tiny REST call, the link itself opens normally in a new tab
@@ -257,8 +267,7 @@
     e.preventDefault();
     var text = form.text.value.trim();
     if (text.length < 3) { msg.textContent = 'Please write a short review first.'; return; }
-    var done = store.get('zt_reviewed', []);
-    if (done.indexOf(id) > -1) { msg.textContent = 'You already reviewed this app on this device.'; return; }
+    if (Date.now() - (store.get('zt_last_rev', 0)) < 15000) { msg.textContent = 'Please wait a few seconds before posting another review.'; return; }
     var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = 'Posting…';
     var review = { author: store.get('zt_name', '') || 'Guest User', handle: store.get('zt_handle', '') || '@guest', text: text, rating: rating, timestamp: Date.now(), images: '' };
     var base = DB + '/reviews/' + encodeURIComponent(id);
@@ -276,14 +285,11 @@
           }).catch(function () { });
       })
       .then(function () {
-        done.push(id); store.set('zt_reviewed', done);
-        var mine = store.get('zt_my_rev', {}); mine[id] = { ts: review.timestamp, author: review.author, text: text, rating: rating }; store.set('zt_my_rev', mine);
+        store.set('zt_last_rev', Date.now());
+        var mine = store.get('zt_my_rev', {}), prev = mine[id] ? (Array.isArray(mine[id]) ? mine[id] : [mine[id]]) : []; prev.push({ ts: review.timestamp, author: review.author, text: text, rating: rating }); mine[id] = prev; store.set('zt_my_rev', mine);
         var logs = store.get('zt_review_logs', []); logs.unshift('[' + rating + '★] ' + app.dataset.name + ': ' + text); store.set('zt_review_logs', logs.slice(0, 30));
         var list = $('#revList'), none = $('#noRev'); if (none) none.remove();
-        var el = document.createElement('article'); el.className = 'rev'; el.dataset.ts = review.timestamp;
-        el.innerHTML = '<header><b></b><span class="stars"></span></header><p></p><footer>Just now</footer>';
-        $('b', el).textContent = review.author; $('.stars', el).textContent = '★★★★★'.slice(0, rating) + '☆☆☆☆☆'.slice(0, 5 - rating); $('p', el).textContent = text;
-        list.insertBefore(el, list.firstChild); form.text.value = ''; msg.textContent = 'Thanks! Your review is live and will show on the page for everyone shortly.';
+        var el = revEl({ ts: review.timestamp, author: review.author, text: text, rating: rating }); list.insertBefore(el, list.firstChild); form.text.value = ''; btn.disabled = false; msg.textContent = 'Thanks! Your review is live and will show on the page for everyone shortly.';
       })
       .catch(function () { msg.textContent = 'Could not post the review. Please try again.'; btn.disabled = false; });
   });
