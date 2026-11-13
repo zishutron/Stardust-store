@@ -457,7 +457,7 @@ function libraryPage(cats) {
     </form>
     <form class="form pf-delete" id="pfDelete" hidden novalidate>
       <h3>Delete account</h3>
-      <p class="muted">This permanently deletes your profile, your username, your reviews, your saved apps and download history, and removes your login. It cannot be undone.</p>
+      <p class="muted">This permanently deletes your profile, your username, your reviews, and removes your login. Saved apps and download history on this phone are cleared too. It cannot be undone.</p>
       <p class="warn-box"><b>Developer console:</b> this same login is used for the UptoZishu developer console. If you have published apps there, you will lose access to them, and they will no longer be editable by you.</p>
       <label id="delPwWrap">Enter your password to confirm<input name="password" type="password" autocomplete="current-password"></label>
       <div class="form-row"><button class="btn btn-danger" type="submit">Delete my account</button><button class="btn" id="delCancel" type="button">Cancel</button></div>
