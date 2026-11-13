@@ -77,11 +77,27 @@
     <div class="pf-view">
       <div class="pf-top"><div class="avatar" id="pfAvatar" aria-hidden="true">G</div>
         <div class="pf-info"><h2 id="pfName"></h2><p class="pf-handle" id="pfHandle"></p></div>
-        <button class="icon-btn" id="pfEdit" type="button" aria-label="Edit profile"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button></div>
+        <button class="icon-btn" id="pfSettingsBtn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></div>
       <p class="pf-bio" id="pfBio"></p>
       <p class="muted small" id="pfEmail"></p>
-      <button class="btn pf-out" id="pfOut" type="button">Sign out</button>
     </div>
+    <div class="pf-settings" id="pfSettings" hidden>
+      <div class="pf-sethead"><button class="icon-btn" id="pfBack" type="button" aria-label="Back">‹</button><h3>Settings</h3></div>
+      <ul class="setlist">
+        <li><button type="button" id="setEdit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Edit profile</span></button></li>
+        <li><a href="/support/"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8M12 17h.01"/></svg><span>Customer support</span></a></li>
+        <li><a href="/about/"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg><span>About</span></a></li>
+        <li><button type="button" id="setOut"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></button></li>
+        <li><button type="button" id="setDelete" class="danger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg><span>Delete account</span></button></li>
+      </ul>
+    </div>
+    <form class="form pf-delete" id="pfDelete" hidden novalidate>
+      <h3>Delete account</h3>
+      <p class="muted">This permanently deletes your profile, your username and all your reviews, and removes your login. It cannot be undone. Saved apps and download history on this device are not affected.</p>
+      <label id="delPwWrap">Enter your password to confirm<input name="password" type="password" autocomplete="current-password"></label>
+      <div class="form-row"><button class="btn btn-danger" type="submit">Delete my account</button><button class="btn" id="delCancel" type="button">Cancel</button></div>
+      <p class="muted small" id="delMsg" role="status"></p>
+    </form>
     <form class="pf-edit form" id="pfForm" hidden>
       <h3>Edit profile</h3>
       <label>Name<input name="name" maxlength="40" autocomplete="name"></label>
