@@ -335,3 +335,8 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .lockfield{position:relative;display:block}
 .lockfield input{padding-right:42px;color:var(--muted);cursor:not-allowed}
 .lockfield svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.tbl-wrap{overflow-x:auto;margin:10px 0;border:1px solid var(--line);border-radius:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{background:var(--soft);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.tbl tr:last-child td{border-bottom:0}
