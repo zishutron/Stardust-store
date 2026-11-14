@@ -136,7 +136,7 @@ function normalize(apps, reviewsAll, knownReviews) {
     const updatedTs = Date.parse(str(a.updatedDate)) || ts;
     const history = [...new Set([...list(a.versionHistory), str(a.version)].filter(Boolean))];
 
-    const revs = Object.entries(reviewsAll[a.id] || {}).filter(([, r]) => r && typeof r === 'object')
+    const revs = Object.entries(reviewsAll[a.id] || {}).filter(([, r]) => r && typeof r === 'object' && !r.hidden)
       .map(([key, r]) => ({
         uid: str(r.uid) && str(r.uid) === key ? key : '', user: cleanUser(r.username),
         author: trunc(r.author || 'Anonymous', 40), handle: trunc(r.handle || '', 40), text: str(r.text).slice(0, 1000),
