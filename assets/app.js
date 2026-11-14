@@ -489,6 +489,20 @@
     if (r.uid && me() && r.uid === me().uid) attachMenu(rv);
     return rv;
   }
+  // a review the developer has hidden stays visible to the person who wrote it (and they can still edit or delete it)
+  (function showOwnHidden() {
+    var m = me(); if (!m || !store.get('zt_uid', '')) return;
+    var list = $('#revList'); if (!list || list.querySelector('.rev[data-uid="' + m.uid + '"]')) return;
+    dbReq('GET', 'reviews/' + encodeURIComponent(id) + '/' + m.uid).then(function (r) {
+      if (!r || typeof r !== 'object' || !r.hidden || !r.text) return;
+      if (list.querySelector('.rev[data-uid="' + m.uid + '"]')) return;
+      var none = $('#noRev'); if (none) none.remove();
+      var el = revEl({ ts: r.timestamp, uid: m.uid, author: r.author || m.name, username: r.username || m.username, text: String(r.text), rating: Math.min(5, Math.max(1, Math.round(+r.rating || 5))) });
+      var t = $('time', el); if (t && r.timestamp) t.textContent = new Date(+r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      if (r.reply) { var rp = document.createElement('div'); rp.className = 'reply'; rp.innerHTML = '<b>Developer reply</b><p></p>'; $('p', rp).textContent = String(r.reply); el.appendChild(rp); }
+      list.insertBefore(el, list.firstChild);
+    }).catch(function () { });
+  })();
   function fmtN(n) { return n < 1000 ? String(n) : n < 1e6 ? (n / 1e3).toFixed(n < 1e4 ? 1 : 0).replace(/\.0$/, '') + 'K' : (n / 1e6).toFixed(n < 1e7 ? 1 : 0).replace(/\.0$/, '') + 'M'; }
   function bumpDl(add) {
     var el = $('#dlCount'); if (!el) return;
