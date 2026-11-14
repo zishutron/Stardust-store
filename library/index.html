@@ -51,7 +51,7 @@
     <form class="form" id="authForm" novalidate>
       <div class="su" hidden>
         <label>Name<input name="name" maxlength="40" autocomplete="name" placeholder="Your name"></label>
-        <label>Username<input name="username" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."></label>
+        <label>Username<input name="username" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."><small class="un-note">You can't change your username later.</small></label>
         <label>Bio<textarea name="bio" rows="2" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
       </div>
       <label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
@@ -67,7 +67,7 @@
     <h2>Finish your profile</h2>
     <p class="muted">Choose a unique username. It is shown on your reviews so people can find your profile.</p>
     <label>Name<input name="name" maxlength="40" autocomplete="name"></label>
-    <label>Username<input name="username" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."></label>
+    <label>Username<input name="username" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."><small class="un-note">You can't change your username later.</small></label>
     <label>Bio<textarea name="bio" rows="2" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
     <div class="form-row"><button class="btn btn-primary" type="submit">Save profile</button><button class="btn" id="cpOut" type="button">Sign out</button></div>
     <p class="muted small" id="cpMsg" role="status"></p>
