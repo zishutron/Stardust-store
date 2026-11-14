@@ -620,6 +620,19 @@
     $$('#revList .rev[data-uid="' + m.uid + '"]').forEach(attachMenu);
   })();
 
+  // tell the app's developer about a new review (shows in the developer console, Notifications)
+  function notifyDeveloper(uid, tok, r) {
+    dbReq('GET', 'apps/' + encodeURIComponent(id) + '/developerUid').then(function (dev) {
+      if (!dev || typeof dev !== 'string') return;
+      var key = ('r_' + id + '_' + uid).replace(/[^A-Za-z0-9_-]/g, '_');
+      var name = (app.dataset.name || 'your app');
+      return dbReq('PUT', 'notifications/' + encodeURIComponent(dev) + '/' + key, {
+        type: 'review', appId: id, appName: name.slice(0, 80), revId: uid, by: uid, rating: r.rating,
+        text: (r.author || 'Someone') + ' reviewed ' + name, snippet: r.text.slice(0, 120), timestamp: r.timestamp, read: false
+      }, tok);
+    }).catch(function () { /* the review itself is already saved; the notification is a bonus */ });
+  }
+
   // reviews: only for signed-in members, one review per person per app (the review is stored under the member's uid)
   var form = $('#revForm'), gate = $('#revGate'), rating = 5;
   if (!form) return;
@@ -639,7 +652,7 @@
     var text = form.text.value.trim();
     if (text.length < 3) { msg.textContent = 'Please write a short review first.'; return; }
     var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = 'Posting…';
-    var base = 'reviews/' + encodeURIComponent(id), review;
+    var base = 'reviews/' + encodeURIComponent(id), review, isNew = false;
     authUser().then(function (user) {
       if (!user) { setMe(null); gate.hidden = false; form.hidden = true; throw new Error('signin'); }
       var p = me();
@@ -647,7 +660,9 @@
       return prof.then(function (pr) {
         review = { uid: user.uid, author: pr.name, username: pr.username, text: text, rating: rating, timestamp: Date.now(), images: '' };
         return user.getIdToken().then(function (tok) {
-          return dbReq('PATCH', base + '/' + user.uid, review, tok).then(function () {
+          // a brand-new review (not an edit) also sends a notification to the app's developer
+          return dbReq('GET', base + '/' + user.uid).catch(function () { return null; }).then(function (prev) { isNew = !prev; return dbReq('PATCH', base + '/' + user.uid, review, tok); }).then(function () {
+            if (isNew) notifyDeveloper(user.uid, tok, review);
             // recompute the counters from the real reviews
             return dbReq('GET', base).then(function (all) {
               var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object' && !r.hidden; });
