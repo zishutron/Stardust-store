@@ -389,7 +389,7 @@ const ic = {
 const gear = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
 const pencil = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 function libraryPage(cats) {
-  const fld = (name, label, extra = '') => `<label>${label}<input name="${name}" ${extra}></label>`;
+  const fld = (name, label, extra = '', note = '') => `<label>${label}<input name="${name}" ${extra}>${note ? `<small class="un-note">${note}</small>` : ''}</label>`;
   const body = `<h1 class="sr-only">My library</h1>
 <section class="card account" id="acct" aria-label="Your account">
   <p class="muted center" id="acctLoading">Loading…</p>
@@ -402,7 +402,7 @@ function libraryPage(cats) {
     <form class="form" id="authForm" novalidate>
       <div class="su" hidden>
         ${fld('name', 'Name', 'maxlength="40" autocomplete="name" placeholder="Your name"')}
-        ${fld('username', 'Username', 'maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."')}
+        ${fld('username', 'Username', 'maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."', "You can't change your username later.")}
         <label>Bio<textarea name="bio" rows="2" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
       </div>
       ${fld('email', 'Email', 'type="email" autocomplete="email" placeholder="you@example.com"')}
@@ -418,7 +418,7 @@ function libraryPage(cats) {
     <h2>Finish your profile</h2>
     <p class="muted">Choose a unique username. It is shown on your reviews so people can find your profile.</p>
     ${fld('name', 'Name', 'maxlength="40" autocomplete="name"')}
-    ${fld('username', 'Username', 'maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."')}
+    ${fld('username', 'Username', 'maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="letters, numbers, _ and ."', "You can't change your username later.")}
     <label>Bio<textarea name="bio" rows="2" maxlength="140" placeholder="Tell people a little about you"></textarea></label>
     <div class="form-row"><button class="btn btn-primary" type="submit">Save profile</button><button class="btn" id="cpOut" type="button">Sign out</button></div>
     <p class="muted small" id="cpMsg" role="status"></p>
