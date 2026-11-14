@@ -359,3 +359,5 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 
 .starpick button{color:color-mix(in srgb,var(--muted) 50%,transparent)}
 .starpick button.on{color:var(--star)}
+
+.un-note{display:block;margin-top:4px;font-size:12px;font-weight:400;color:var(--muted)}
