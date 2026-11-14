@@ -365,3 +365,5 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .un-hint:empty{display:none}
 .un-hint.ok{color:#16a34a}
 .un-hint.bad{color:#dc2626}
+
+.rev-hidden-notice{margin:8px 0 0;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,#dc2626 12%,transparent);color:#dc2626;font-size:13px;font-weight:600;line-height:1.4}

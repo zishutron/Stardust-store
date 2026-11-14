@@ -500,6 +500,9 @@
       var el = revEl({ ts: r.timestamp, uid: m.uid, author: r.author || m.name, username: r.username || m.username, text: String(r.text), rating: Math.min(5, Math.max(1, Math.round(+r.rating || 5))) });
       var t = $('time', el); if (t && r.timestamp) t.textContent = new Date(+r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       if (r.reply) { var rp = document.createElement('div'); rp.className = 'reply'; rp.innerHTML = '<b>Developer reply</b><p></p>'; $('p', rp).textContent = String(r.reply); el.appendChild(rp); }
+      var note = document.createElement('p'); note.className = 'rev-hidden-notice'; note.setAttribute('role', 'note');
+      note.textContent = 'The developer has hidden your review from other users. Only you can see it.';
+      $('.rv-meta', el).insertAdjacentElement('afterend', note);
       list.insertBefore(el, list.firstChild);
     }).catch(function () { });
   })();
