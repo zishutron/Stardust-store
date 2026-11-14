@@ -347,7 +347,7 @@
           // 2) fix rating + count of the apps I had reviewed
           return Promise.all(hit.filter(Boolean).map(function (aid) {
             return dbReq('GET', 'reviews/' + encodeURIComponent(aid)).then(function (all) {
-              var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object'; });
+              var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object' && !r.hidden; });
               var avg = rs.length ? Math.round(rs.reduce(function (s, r) { return s + (+r.rating || 5); }, 0) / rs.length * 10) / 10 : 0;
               return dbReq('PUT', 'apps/' + encodeURIComponent(aid) + '/reviewCount', rs.length).then(function () { return dbReq('PUT', 'apps/' + encodeURIComponent(aid) + '/rating', avg); });
             }).catch(function () { });
@@ -539,7 +539,7 @@
   }
   function recount() {
     return dbReq('GET', 'reviews/' + encodeURIComponent(id)).then(function (all) {
-      var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object'; });
+      var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object' && !r.hidden; });
       var avg = rs.length ? Math.round(rs.reduce(function (t, r) { return t + (+r.rating || 5); }, 0) / rs.length * 10) / 10 : 0;
       return dbReq('PUT', 'apps/' + encodeURIComponent(id) + '/reviewCount', rs.length).then(function () { return dbReq('PUT', 'apps/' + encodeURIComponent(id) + '/rating', avg); });
     }).catch(function () { });
@@ -650,7 +650,7 @@
           return dbReq('PATCH', base + '/' + user.uid, review, tok).then(function () {
             // recompute the counters from the real reviews
             return dbReq('GET', base).then(function (all) {
-              var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object'; });
+              var rs = Object.keys(all || {}).map(function (k) { return all[k]; }).filter(function (r) { return r && typeof r === 'object' && !r.hidden; });
               if (!rs.length) return;
               var avg = rs.reduce(function (s, r) { return s + (+r.rating || 5); }, 0) / rs.length;
               return dbReq('PUT', 'apps/' + encodeURIComponent(id) + '/reviewCount', rs.length).then(function () { return dbReq('PUT', 'apps/' + encodeURIComponent(id) + '/rating', Math.round(avg * 10) / 10); });
