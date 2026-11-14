@@ -174,6 +174,26 @@
       form.password.autocomplete = m === 'up' ? 'new-password' : 'current-password'; amsg.textContent = '';
     };
     $('#authToggle').addEventListener('click', function () { setMode(authMode === 'in' ? 'up' : 'in'); });
+    // live "available / taken" hint under the username boxes (sign up + finish profile)
+    $$('#acct input[name=username]:not([disabled])').forEach(function (inp) {
+      var hint = document.createElement('small'); hint.className = 'un-hint'; hint.setAttribute('aria-live', 'polite');
+      inp.parentNode.insertBefore(hint, inp.nextSibling);
+      var t = 0, say = function (txt, cls) { hint.textContent = txt; hint.className = 'un-hint' + (cls ? ' ' + cls : ''); };
+      inp.addEventListener('input', function () {
+        clearTimeout(t);
+        var u = cleanUser(inp.value);
+        if (!u) { say(''); return; }
+        if (!USER_RE.test(u)) { say('Username must be 3–20 characters: lowercase letters, numbers, _ or .', 'bad'); return; }
+        say('Checking…');
+        t = setTimeout(function () {
+          dbReq('GET', 'usernames/' + u).then(function (owner) {
+            if (cleanUser(inp.value) !== u) return;
+            var mine = me() && me().uid;
+            if (owner && owner !== mine) say('@' + u + ' is already taken', 'bad'); else say('@' + u + ' is available', 'ok');
+          }).catch(function () { say(''); });
+        }, 400);
+      });
+    });
     var errText = function (e) {
       var c = (e && e.code) || '';
       if (c === 'auth/email-already-in-use') return 'That email already has an account. Try signing in.';

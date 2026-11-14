@@ -361,3 +361,7 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .starpick button.on{color:var(--star)}
 
 .un-note{display:block;margin-top:4px;font-size:12px;font-weight:400;color:var(--muted)}
+.un-hint{display:block;margin-top:4px;font-size:12px;font-weight:600;color:var(--muted)}
+.un-hint:empty{display:none}
+.un-hint.ok{color:#16a34a}
+.un-hint.bad{color:#dc2626}
