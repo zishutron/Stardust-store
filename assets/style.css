@@ -356,3 +356,6 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .rv-edit .form-row,.rv-confirm .form-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .rv-confirm{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
 .rv-confirm p{margin:0;font-weight:600}
+
+.starpick button{color:color-mix(in srgb,var(--muted) 50%,transparent)}
+.starpick button.on{color:var(--star)}
