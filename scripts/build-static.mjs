@@ -124,6 +124,13 @@ async function loadReviews(apps) {
   return { data, known };
 }
 
+async function loadDevProfiles() {
+  try {
+    if (process.env.DEVS_FILE) return JSON.parse(await readFile(process.env.DEVS_FILE, 'utf8')) || {};
+    return (await getJson(`${DB}/devprofiles.json`, 2)) || {};
+  } catch (e) { console.warn(`[build] devprofiles not readable (${e.message}); developer pages use the app data only`); return {}; }
+}
+
 function normalize(apps, reviewsAll, knownReviews) {
   const out = [];
   for (const a of apps) {
@@ -152,7 +159,7 @@ function normalize(apps, reviewsAll, knownReviews) {
       short: str(a.shortDescription), desc: str(a.description), whatsNew: str(a.whatsNew).split('\n').map(str).filter(Boolean),
       downloadUrl: httpUrl(a.downloadUrl), icon: httpUrl(a.icon) || FALLBACK_ICON, banner: httpUrl(a.banner),
       shots: list(a.screenshot).map(httpUrl).filter(Boolean), tags: list(a.tags).slice(0, 12),
-      permissions: list(a.permissions), history, dev: str(a.developerName || a.developer) || 'Independent developer',
+      permissions: list(a.permissions), history, devUid: str(a.developerUid), dev: str(a.developerName || a.developer) || 'Independent developer',
       website: httpUrl(a.website), privacy: httpUrl(a.privacyPolicy), youtube: httpUrl(a.youtube),
       minAndroid: str(a.minAndroid) || '5.0', language: str(a.language) || 'English', sha256: /^[a-f0-9]{64}$/i.test(str(a.sha256)) ? str(a.sha256) : '',
       // rating + count always come from the real reviews when they could be read (the stored 4.5 is only a legacy default)
@@ -172,6 +179,29 @@ function normalize(apps, reviewsAll, knownReviews) {
     used.add(s); a.slug = s; a.path = `/apps/${s}/`;
   }
   return out;
+}
+
+// developers: public profile (devprofiles/<uid>) + their live apps. Their page is /developer/<username>/
+const DEV_SOCIALS = [
+  ['website', 'Website', null], ['github', 'GitHub', 'https://github.com/'], ['twitter', 'X', 'https://x.com/'], ['instagram', 'Instagram', 'https://instagram.com/'],
+  ['youtube', 'YouTube', 'https://youtube.com/@'], ['telegram', 'Telegram', 'https://t.me/'], ['linkedin', 'LinkedIn', 'https://linkedin.com/in/'], ['discord', 'Discord', null]
+];
+const socialUrl = (v, base) => { v = str(v); if (!v) return ''; if (/^https?:\/\//i.test(v)) return httpUrl(v); if (!base) return httpUrl('https://' + v.replace(/^\/+/, '')); const h = v.replace(/^@/, '').replace(/[^A-Za-z0-9_.\-/]/g, ''); return h ? base + h : ''; };
+function buildDevs(apps, profiles) {
+  const map = new Map();
+  for (const a of apps) { if (!a.devUid) continue; if (!map.has(a.devUid)) map.set(a.devUid, []); map.get(a.devUid).push(a); }
+  const devs = []; const used = new Set();
+  for (const [uid, list2] of map) {
+    const p = profiles[uid] && typeof profiles[uid] === 'object' ? profiles[uid] : {};
+    const name = trunc(p.name || list2[0].dev, 60);
+    let slug = cleanUser(p.username) || uid.replace(/[^A-Za-z0-9_-]/g, '');
+    if (!slug || used.has(slug)) slug = uid.replace(/[^A-Za-z0-9_-]/g, '') || sha(uid);
+    used.add(slug);
+    const d = { uid, slug, path: `/developer/${slug}/`, name, p, apps: list2, verified: p.verified === true };
+    devs.push(d);
+    for (const a of list2) { a.dev = name; a.devPath = d.path; a.devVerified = d.verified; }
+  }
+  return devs;
 }
 
 // ---------------------------------------------------------------- rendering primitives
@@ -589,6 +619,53 @@ const founderPage = (cats) => infoPage({ cats, path: '/founder/', title: `About 
 <div class="social-grid">${SOCIALS.map(([n, u]) => `<a class="card social" href="${esc(u)}" target="_blank" rel="noopener"><b>${esc(n)}</b><small>${esc(u.replace(/^https?:\/\/(www\.)?/, ''))}</small></a>`).join('')}</div>
 <p><a class="btn btn-ghost" href="${esc(FOUNDER_PROFILE)}" target="_blank" rel="noopener">View full profile on ZISHU TRON</a></p>` });
 
+function devPage(d, cats) {
+  const p = d.p, apps = [...d.apps].sort(byDl);
+  const dl = apps.reduce((t, a) => t + a.dl, 0), rc = apps.reduce((t, a) => t + a.rc, 0);
+  const rate = rc ? Math.round((apps.reduce((t, a) => t + a.rating * a.rc, 0) / rc) * 10) / 10 : 0;
+  const first = apps.reduce((m, a) => Math.min(m, a.ts || Infinity), Infinity);
+  const since = num(p.createdAt) || (Number.isFinite(first) ? first : 0);
+  const cover = httpUrl(p.cover), logo = httpUrl(p.logo), color = avc(d.slug);
+  const TYPES = { individual: 'Individual developer', studio: 'Studio', company: 'Company', opensource: 'Open source', student: 'Student developer' };
+  const type = TYPES[str(p.type)] || '';
+  const about = str(p.about), tagline = str(p.tagline), loc = str(p.location), founded = str(p.founded).replace(/[^0-9]/g, '').slice(0, 4);
+  const email = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(str(p.email)) ? str(p.email) : '';
+  const links = DEV_SOCIALS.map(([k, label, base]) => { const u = k === 'discord' ? socialUrl(p[k], null) : socialUrl(p[k], base); return u ? { k, label, u } : null; }).filter(Boolean);
+  const initial = (d.name.trim().charAt(0) || 'D').toUpperCase();
+  const info = [loc && ['pin', esc(loc)], type && ['id', esc(type)], founded && ['cal', `Since ${esc(founded)}`], since && !founded && ['cal', `On ${SITE} since ${new Date(since).getFullYear()}`]].filter(Boolean)
+    .map(([, t]) => `<span class="chip">${t}</span>`).join('');
+  const crumbs = [['/', 'Home'], [null, d.name]];
+  const aboutHtml = about ? about.split(/\n{2,}/).map((x) => `<p>${esc(x).replace(/\n/g, '<br>')}</p>`).join('') : '';
+  const body = `${crumbHtml(crumbs)}
+<article class="devp" data-dev="${esc(d.slug)}">
+  <header class="dev-hero card">
+    <div class="dev-cover ${cover ? '' : color}"${cover ? ` style="background-image:url('${esc(cover)}')"` : ''}></div>
+    <div class="dev-id">
+      ${logo ? `<img class="dev-logo" src="${esc(logo)}" width="104" height="104" alt="${esc(d.name)} logo">` : `<span class="dev-logo avatar ${color}" aria-hidden="true">${esc(initial)}</span>`}
+      <div class="dev-name">
+        <h1>${esc(d.name)}${d.verified ? ` <span class="verified" title="Verified developer">${svg.shield}Verified</span>` : ''}</h1>
+        <p class="dev-sub">@${esc(d.slug)}${type ? ` · ${esc(type)}` : ''}</p>
+      </div>
+    </div>
+    ${tagline ? `<p class="dev-tag">${esc(tagline)}</p>` : ''}
+    ${info ? `<div class="chips dev-info">${info}</div>` : ''}
+    <ul class="facts dev-facts">
+      <li><b>${apps.length}</b><small>${apps.length === 1 ? 'app' : 'apps'}</small></li>
+      <li><b>${fmtCount(dl)}</b><small>downloads</small></li>
+      <li><b>${rc ? `${rate.toFixed(1)} <span class="star">★</span>` : 'New'}</b><small>${rc ? `${fmtCount(rc)} ${rc === 1 ? 'review' : 'reviews'}` : 'no reviews'}</small></li>
+    </ul>
+    ${(links.length || email) ? `<div class="dev-links">${links.map((l) => `<a class="btn btn-ghost" href="${esc(l.u)}" target="_blank" rel="nofollow noopener me">${esc(l.label)}</a>`).join('')}${email ? `<a class="btn btn-primary" href="mailto:${esc(email)}">Contact</a>` : ''}</div>` : ''}
+  </header>
+  ${aboutHtml ? `<section class="sec prose"><h2>About ${esc(d.name)}</h2>${aboutHtml}</section>` : ''}
+  <section class="sec"><div class="sec-h"><h2>Apps by ${esc(d.name)}</h2><span class="muted">${apps.length}</span></div>${sortBar('#devapps')}<div class="tiles" id="devapps">${apps.map(tile).join('')}</div></section>
+</article>`;
+  const title = `${d.name} — Android apps by ${d.name} | ${SITE}`;
+  const desc = tagline || trunc(about, 150) || `${d.name} publishes ${apps.length} ${apps.length === 1 ? 'app' : 'apps'} on ${SITE}. See all apps, ratings and downloads.`;
+  const ld = [crumbLd(crumbs), { '@context': 'https://schema.org', '@type': ['studio', 'company'].includes(str(p.type)) || str(p.type) === 'opensource' ? 'Organization' : 'Person', name: d.name, url: `${BASE}${d.path}`,
+    ...(logo ? { image: logo } : {}), ...(about ? { description: trunc(about, 300) } : {}), sameAs: links.map((l) => l.u) }];
+  return layout({ title, desc, path: d.path, body, ld, image: cover || logo || undefined, page: 'dev', cats });
+}
+
 function appPage(a, apps, cats) {
   const cat = cats.find((c) => c.slug === a.catSlug);
   const related = apps.filter((x) => x.id !== a.id && x.catSlug === a.catSlug).sort(byDl).slice(0, 10);
@@ -608,7 +685,7 @@ function appPage(a, apps, cats) {
   const info = [
     ['Package', a.pkg], ['Version', a.version], ['Size', a.size], ['Category', `<a href="/category/${a.catSlug}/">${esc(a.catRaw)}</a>`, true],
     ['Requires', `Android ${a.minAndroid}+`], ['Updated', dateFmt(a.updatedTs)], ['Released', dateFmt(a.ts)], ['Downloads', a.dl.toLocaleString('en-US')],
-    ['Developer', a.dev], ['Language', a.language],
+    ['Developer', a.devPath ? `<a href="${a.devPath}">${esc(a.dev)}</a>` : a.dev, !!a.devPath], ['Language', a.language],
     ['Website', a.website ? `<a href="${esc(a.website)}" rel="nofollow noopener" target="_blank">${esc(a.website.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a>` : '', true],
     ['Privacy policy', a.privacy ? `<a href="${esc(a.privacy)}" rel="nofollow noopener" target="_blank">View</a>` : '', true]
   ].filter(([, v]) => v).map(([k, v, raw]) => `<div><dt>${k}</dt><dd>${raw ? v : esc(v)}</dd></div>`).join('');
@@ -623,7 +700,7 @@ function appPage(a, apps, cats) {
     <img class="app-ic" src="${esc(a.icon)}" width="112" height="112" alt="${esc(a.name)} icon" fetchpriority="high">
     <div class="app-main">
       <h1>${esc(a.name)}${a.verified ? ` <span class="verified" title="Verified developer">${svg.shield}Verified</span>` : ''}</h1>
-      <p class="dev">${esc(a.dev)}</p>
+      <p class="dev">${a.devPath ? `<a href="${a.devPath}" title="View developer profile">${esc(a.dev)}</a>` : esc(a.dev)}${a.devVerified ? ` <span class="verified sm" title="Verified developer">${svg.shield}</span>` : ''}</p>
       <ul class="facts">
         <li><b>${a.rc > 0 ? `${a.rating.toFixed(1)} <span class="star">★</span>` : 'New'}</b><small>${a.rc > 0 ? `${fmtCount(a.rc)} ${a.rc === 1 ? 'review' : 'reviews'}` : 'no reviews'}</small></li>
         <li><b id="dlCount" data-dl="${a.dl}">${fmtCount(a.dl)}</b><small>downloads</small></li>
@@ -679,13 +756,14 @@ function notFound(cats) {
 }
 
 // ---------------------------------------------------------------- feeds
-function sitemap(apps, cats) {
+function sitemap(apps, cats, devs = []) {
   const last = apps.reduce((m, a) => Math.max(m, a.updatedTs), 0);
   const urls = [
     { loc: '/', lm: last, p: '1.0', f: 'daily' }, { loc: '/apps/', lm: last, p: '0.9', f: 'daily' }, { loc: '/top/', lm: last, p: '0.8', f: 'daily' },
     { loc: '/about/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/support/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/founder/', lm: 0, p: '0.4', f: 'monthly' },
     ...NAV_COLLECTIONS.map((c) => ({ loc: c.path, lm: last, p: '0.7', f: 'daily' })),
     ...cats.map((c) => ({ loc: `/category/${c.slug}/`, lm: c.last, p: '0.7', f: 'daily' })),
+    ...devs.map((d) => ({ loc: d.path, lm: d.apps.reduce((m, a) => Math.max(m, a.updatedTs), 0), p: '0.6', f: 'weekly' })),
     ...apps.map((a) => ({ loc: a.path, lm: a.updatedTs, p: '0.8', f: 'weekly' }))
   ];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${escXml(BASE + u.loc)}</loc>${u.lm ? `<lastmod>${isoDate(u.lm)}</lastmod>` : ''}<changefreq>${u.f}</changefreq><priority>${u.p}</priority></url>`).join('\n')}\n</urlset>\n`;
@@ -719,6 +797,7 @@ async function main() {
   const rawApps = await loadApps();
   const { data: reviews, known } = await loadReviews(rawApps.filter((a) => LIVE.has(str(a.status).toLowerCase())));
   const apps = normalize(rawApps, reviews, known);
+  const DEVS = buildDevs(apps, await loadDevProfiles());
   console.log(`[build] ${rawApps.length} app record(s), ${apps.length} live`);
 
   // ---- incremental build -------------------------------------------------------
@@ -785,7 +864,7 @@ async function main() {
     await write('privacy.html', privacyPage(cats));
     await write('terms.html', termsPage(cats));
     await write('404.html', notFound(cats));
-    await write('sitemap.xml', sitemap(listApps, cats));
+    await write('sitemap.xml', sitemap(listApps, cats, DEVS));
     await write('rss.xml', rss(listApps));
     await write('robots.txt', robots());
     await write('manifest.webmanifest', manifest());
@@ -798,6 +877,10 @@ async function main() {
 
   // app pages: always refreshed with live counters + reviews; git only sees the ones that actually changed
   for (const a of apps) await write(`apps/${a.slug}/index.html`, appPage(a, listApps, cats));
+  // developer profile pages (always refreshed: they show profile edits and live counters)
+  await rm(join(ROOT, 'developer'), { recursive: true, force: true });
+  const devApps = (d) => ({ ...d, apps: d.apps.map((x) => listApps.find((l) => l.id === x.id) || x) });
+  for (const d of DEVS) await write(`${d.path.slice(1)}index.html`, devPage(devApps(d), cats));
   await write('data/build-state.json', JSON.stringify(state));
 
   console.log(`[build] Done: ${apps.length} app page(s)${same ? '' : `, ${cats.length} categor${cats.length === 1 ? 'y' : 'ies'}`}.`);
