@@ -387,3 +387,7 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .verified.sm{padding:2px 6px;vertical-align:middle}.verified.sm svg{width:13px;height:13px}
 .dev a{text-decoration:none}.dev a:hover{text-decoration:underline}
 @media(max-width:560px){.dev-cover{height:110px}.dev-id{margin-top:-38px;padding:0 16px}.dev-logo{width:80px;height:80px;font-size:34px}.dev-tag,.dev-info,.dev-facts{margin-left:16px;margin-right:16px}.dev-links{padding:14px 16px 16px}}
+
+.dev-name{padding-top:50px}
+.dev-name h1{color:var(--brand)}
+@media(max-width:560px){.dev-name{padding-top:44px}}
