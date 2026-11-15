@@ -367,3 +367,23 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .un-hint.bad{color:#dc2626}
 
 .rev-hidden-notice{margin:8px 0 0;padding:8px 12px;border-radius:10px;background:color-mix(in srgb,#dc2626 12%,transparent);color:#dc2626;font-size:13px;font-weight:600;line-height:1.4}
+
+/* developer profile page */
+.devp{min-width:0}
+.dev-hero{padding:0;overflow:hidden}
+.dev-cover{height:150px;background-size:cover;background-position:center;background-color:var(--soft)}
+.dev-cover.c0,.dev-cover.c1,.dev-cover.c2,.dev-cover.c3,.dev-cover.c4,.dev-cover.c5,.dev-cover.c6,.dev-cover.c7{opacity:.9}
+.dev-id{display:flex;align-items:flex-end;gap:16px;padding:0 20px;margin-top:-44px}
+.dev-logo{width:96px;height:96px;border-radius:26%;border:4px solid var(--card);background:var(--soft);object-fit:cover;flex-shrink:0;box-shadow:var(--shadow);font-size:40px;font-weight:600;color:#fff;display:grid;place-items:center}
+.dev-name{min-width:0;padding-bottom:6px}
+.dev-name h1{font-size:clamp(22px,4.4vw,30px);letter-spacing:-.5px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0}
+.dev-sub{margin:2px 0 0;color:var(--muted);font-weight:600}
+.dev-tag{font-size:17px;margin:16px 20px 0;color:var(--text)}
+.dev-info{margin:12px 20px 0}
+.dev-facts{margin:16px 20px 0;padding-top:16px;border-top:1px solid var(--line)}
+.dev-links{display:flex;flex-wrap:wrap;gap:8px;padding:16px 20px 20px}
+.dev-links .btn{height:40px;padding:0 16px;font-size:14px}
+.dev-hero>.dev-facts:last-child{padding-bottom:20px}
+.verified.sm{padding:2px 6px;vertical-align:middle}.verified.sm svg{width:13px;height:13px}
+.dev a{text-decoration:none}.dev a:hover{text-decoration:underline}
+@media(max-width:560px){.dev-cover{height:110px}.dev-id{margin-top:-38px;padding:0 16px}.dev-logo{width:80px;height:80px;font-size:34px}.dev-tag,.dev-info,.dev-facts{margin-left:16px;margin-right:16px}.dev-links{padding:14px 16px 16px}}
