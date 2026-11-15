@@ -309,7 +309,7 @@ ${head}${ld.map(jsonLd).join('\n')}
     </form>
     <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">${svg.moon}</button>
   </div>
-  <div class="catbar"><div class="wrap cat-in">${catbar}</div></div>
+  ${page === 'home' ? `<div class="catbar"><div class="wrap cat-in">${catbar}</div></div>` : ''}
 </header>
 <main id="main" class="wrap">
 ${body}
