@@ -5,8 +5,16 @@
     <link>https://uptozishu.zishuai.cloud/</link>
     <description>UptoZishu is a free Android app store. Discover, review and download verified APKs of apps and games, updated every few minutes.</description>
     <language>en</language>
-    <lastBuildDate>Thu, 12 Nov 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 16 Nov 2026 00:00:00 GMT</lastBuildDate>
     <atom:link href="https://uptozishu.zishuai.cloud/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Stardust-X-messenger v15.0.0</title>
+      <link>https://uptozishu.zishuai.cloud/apps/stardustxmessenger/</link>
+      <guid isPermaLink="true">https://uptozishu.zishuai.cloud/apps/stardustxmessenger/</guid>
+      <pubDate>Mon, 16 Nov 2026 00:00:00 GMT</pubDate>
+      <description>A great new messaging app with a lot of features. The app has a complete social media feel to it.</description>
+      <category>Social</category>
+    </item>
     <item>
       <title>Zishu OS v1.0.0</title>
       <link>https://uptozishu.zishuai.cloud/apps/com.zishu.os/</link>
@@ -141,14 +149,6 @@
       <guid isPermaLink="true">https://uptozishu.zishuai.cloud/apps/ring.forme/</guid>
       <pubDate>Tue, 08 Sep 2026 00:00:00 GMT</pubDate>
       <description>Connect with the right people nearby. When someone special is close, your heart rings!</description>
-      <category>Social</category>
-    </item>
-    <item>
-      <title>Stardust X messenger v15.0.0</title>
-      <link>https://uptozishu.zishuai.cloud/apps/stardustxmessenger/</link>
-      <guid isPermaLink="true">https://uptozishu.zishuai.cloud/apps/stardustxmessenger/</guid>
-      <pubDate>Tue, 08 Sep 2026 00:00:00 GMT</pubDate>
-      <description>A great new messaging app with a lot of features. The app has a complete social media feel to it.</description>
       <category>Social</category>
     </item>
     <item>
