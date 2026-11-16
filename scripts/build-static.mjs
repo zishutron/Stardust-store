@@ -321,7 +321,7 @@ ${body}
         <p>${esc(TAGLINE)}. Every app is published by its developer and listed with its version, size and requirements.</p></div>
       <div><h3>Explore</h3><a href="/apps/">All apps</a><a href="/top/">Top charts</a><a href="/library/">My library</a><a href="/rss.xml">RSS feed</a></div>
       <div><h3>Company</h3><a href="${esc(MAIN_URL)}/">ZISHU TRON</a><a href="/about/">About</a><a href="/founder/">About Founder</a><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></div>
-      <div><h3>Support</h3><a href="/support/">Customer support</a>${CONSOLE_URL ? `<a href="${esc(CONSOLE_URL)}">Developer console</a>` : ''}<a href="mailto:${esc(SUPPORT_EMAIL)}?subject=Report%20an%20app">Report an app</a></div>
+      <div><h3>Support</h3><a href="/support/">Customer support</a>${CONSOLE_URL ? `<a href="${esc(CONSOLE_URL)}">Developer console</a>` : ''}<a href="/report/">Report an app</a></div>
       <div><h3>Join us</h3>${SOCIALS.map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join('')}</div>
     </div>
     <p class="copy">© ${new Date().getFullYear()} ZISHU TRON · ${SITE}. App names, logos and trademarks belong to their respective owners.</p>
@@ -544,13 +544,40 @@ const aboutPage = (cats) => infoPage({ cats, path: '/about/', title: `About ${SI
 <h2>Contact</h2>
 <p>Questions, feedback or a problem with an app? Visit <a href="/support/">customer support</a>. Meet the person behind the project on the <a href="/founder/">About Founder</a> page.</p>` });
 
+
+const REPORT_REASONS = [
+  ['Malware or unsafe', 'Harmful, spyware or steals data'],
+  ['Misleading or fake', 'Pretends to be another app or lies about what it does'],
+  ['Copyright or trademark', 'Uses someone else’s work or brand'],
+  ['Inappropriate content', 'Adult, violent or hateful content'],
+  ['Does not work / broken download', 'Link is dead or the app will not install'],
+  ['Privacy or data concern', 'Collects data without telling users'],
+  ['Other', 'Something else we should know about'],
+];
+const reportPage = (cats) => infoPage({ cats, path: '/report/', title: `Report an app — ${SITE}`, h1: 'Report an app', sub: 'help us keep the store safe',
+  desc: `Report an unsafe, misleading or broken app on ${SITE}. Our team reviews every report.`,
+  inner: `<div id="rpGate" class="card rp-gate" hidden><h2>Sign in to report</h2><p>Please sign in so we can send you a confirmation and avoid spam reports.</p><a class="btn btn-primary" id="rpSign" href="/library/">Sign in</a></div>
+<form class="form rp-form" id="rpForm" novalidate hidden>
+  <p class="muted">Tell us what is wrong. The more detail you give, the faster we can act. Your report goes to the ${SITE} team and a confirmation is emailed to you.</p>
+  <label>Which app?<select name="app" required><option value="">Loading apps…</option></select></label>
+  <fieldset class="rp-reasons"><legend>What is the problem?</legend>
+    ${REPORT_REASONS.map(([r, h], i) => `<label class="rp-opt"><input type="radio" name="reason" value="${esc(r)}"${i === 0 ? ' checked' : ''}><span><b>${esc(r)}</b><small>${esc(h)}</small></span></label>`).join('')}
+  </fieldset>
+  <label>Describe the problem<textarea name="details" rows="5" maxlength="1000" placeholder="What happened? When did you notice it? Which version of the app?"></textarea><small class="muted"><span id="rpCount">0</span> / 1000 (at least 20 characters)</small></label>
+  <label>Link or proof (optional)<input name="evidence" type="url" maxlength="300" placeholder="https://… screenshot or page that shows the problem"></label>
+  <label class="rp-check"><input type="checkbox" name="ok"><span>I confirm this report is honest and accurate.</span></label>
+  <div class="form-row"><button class="btn btn-primary" type="submit">Submit report</button></div>
+  <p class="muted small" id="rpMsg" role="status"></p>
+</form>
+<div id="rpDone" class="card rp-done" hidden><div class="rp-tick"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 15-17"/></svg></div><h2>Report submitted</h2><p>Thank you for helping keep ${SITE} safe. Your reference is <b id="rpRef"></b>.</p><p class="muted" id="rpMail"></p><a class="btn btn-primary" href="/">Back to the store</a></div>` });
+
 const supportPage = (cats) => infoPage({ cats, path: '/support/', title: `Customer support — ${SITE}`, h1: 'Customer support', sub: 'we read every message',
   desc: `Need help with ${SITE}? Contact customer support by email for download problems, app reports and feedback.`,
   inner: `<div class="card support-card"><p>Email us at</p><p><a class="mail" href="mailto:${esc(SUPPORT_EMAIL)}">${esc(SUPPORT_EMAIL)}</a></p><a class="btn btn-primary" href="mailto:${esc(SUPPORT_EMAIL)}">Send an email</a></div>
 <h2>What to include</h2>
 <ul><li>The app name and version, and a link to its page on ${SITE}.</li><li>Your phone model and Android version.</li><li>A short description of the problem, and a screenshot if you can.</li></ul>
 <h2>Report an app</h2>
-<p>If an app looks unsafe, misleading or broken, email us with the subject “Report an app” and the link to the app page.</p>
+<p>If an app looks unsafe, misleading or broken, use our <a href="/report/">report form</a>. You will get a confirmation email, and our team reviews every report.</p>
 <h2>Are you a developer?</h2>
 <p>Publish and manage your apps in the <a href="${esc(CONSOLE_URL)}">developer console</a>. For help with it, use the same email address.</p>
 <p class="muted">See also: <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of service</a></p>` });
@@ -860,6 +887,7 @@ async function main() {
     await write('library/history/index.html', historyPage(cats));
     await write('about/index.html', aboutPage(cats));
     await write('support/index.html', supportPage(cats));
+    await write('report/index.html', reportPage(cats));
     await write('founder/index.html', founderPage(cats));
     await write('privacy.html', privacyPage(cats));
     await write('terms.html', termsPage(cats));
