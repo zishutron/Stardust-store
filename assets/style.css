@@ -390,3 +390,23 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 
 .dev-name{padding-top:50px}
 @media(max-width:560px){.dev-name{padding-top:44px}}
+
+/* report page */
+.rp-form{display:grid;gap:14px;max-width:640px}
+.rp-form select{width:100%;border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:11px 12px;font:inherit;color:inherit}
+.rp-reasons{border:0;padding:0;margin:0;display:grid;gap:8px}
+.rp-reasons legend{font-size:13px;color:var(--muted);margin-bottom:6px;padding:0}
+.rp-opt{display:flex!important;grid-template-columns:none!important;align-items:flex-start;gap:12px;border:1px solid var(--line);background:var(--soft);border-radius:12px;padding:12px 14px;cursor:pointer;color:inherit!important}
+.rp-opt input{width:auto!important;margin-top:3px;accent-color:var(--brand)}
+.rp-opt b{display:block;font-size:14px;color:var(--text,inherit)}
+.rp-opt small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.rp-opt:has(input:checked){border-color:var(--brand);background:color-mix(in srgb,var(--brand) 9%,var(--soft))}
+.rp-check{display:flex!important;align-items:center;gap:10px;grid-template-columns:none!important}
+.rp-check input{width:auto!important}
+.rp-gate,.rp-done{text-align:center;display:grid;justify-items:center;gap:10px;padding:28px;max-width:560px}
+.rp-tick{width:72px;height:72px;color:#16a34a;animation:rpPop .5s cubic-bezier(.2,1.4,.4,1) both}
+.rp-tick svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.rp-tick circle{stroke-dasharray:151;stroke-dashoffset:151;animation:rpDraw .6s .1s ease forwards}
+.rp-tick path{stroke-dasharray:40;stroke-dashoffset:40;animation:rpDraw .4s .55s ease forwards}
+@keyframes rpDraw{to{stroke-dashoffset:0}}
+@keyframes rpPop{from{transform:scale(.4);opacity:0}}

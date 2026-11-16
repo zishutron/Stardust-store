@@ -301,7 +301,7 @@
     $('#pfCancel').addEventListener('click', function () { panel('set'); });
     $('#delCancel').addEventListener('click', function () { panel('set'); });
     $('#repCancel').addEventListener('click', function () { panel('set'); });
-    $('#setReport').addEventListener('click', function () {
+    $('#setReport').addEventListener('click', function () { location.href = '/report/'; return;
       repMsg.textContent = ''; panel('rep');
       var sel = rep.app; if (sel.options.length < 2) loadIndex().then(function (apps) { apps.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { var o = document.createElement('option'); o.value = a.id; o.textContent = a.name; sel.appendChild(o); }); });
     });
@@ -420,6 +420,50 @@
       if (ch) ch.addEventListener('click', function () { var c = cloud(); c.history = {}; putCloud(c); hist.innerHTML = '<p class="muted">No downloads yet.</p>'; });
     }
   }
+
+  /* ---------- report an app (ticket-style screen) ---------- */
+  (function () {
+    var form = $('#rpForm'); if (!form) return;
+    var MAIL = 'https://script.google.com/macros/s/AKfycbxnsa5QzCWtto5671_JcJlefPOV9YcGlZUHMW9CrH1VuG0Qa8cNe94RLYpkFMC7G6Ga4g/exec';
+    var gate = $('#rpGate'), done = $('#rpDone'), msg = $('#rpMsg'), pre = new URLSearchParams(location.search).get('app') || '';
+    $('#rpSign').href = '/library/?next=' + encodeURIComponent('/report/' + (pre ? '?app=' + encodeURIComponent(pre) : ''));
+    authUser().then(function (u) {
+      if (!u) { gate.hidden = false; return; }
+      form.hidden = false;
+      loadIndex().then(function (apps) {
+        var sel = form.app; sel.innerHTML = '<option value="">Choose an app…</option>';
+        apps.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { var o = document.createElement('option'); o.value = a.id; o.textContent = a.name; if (a.id === pre) o.selected = true; sel.appendChild(o); });
+      }).catch(function () { form.app.innerHTML = '<option value="">Could not load apps</option>'; });
+    });
+    form.details.addEventListener('input', function () { $('#rpCount').textContent = form.details.value.length; });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var det = form.details.value.trim(), ev = form.evidence.value.trim();
+      if (!form.app.value) { msg.textContent = 'Please choose the app you want to report.'; return; }
+      if (det.length < 20) { msg.textContent = 'Please describe the problem in a few more words (at least 20 characters).'; return; }
+      if (ev && !/^https?:\/\/\S+\.\S+/i.test(ev)) { msg.textContent = 'The proof link must start with https://'; return; }
+      if (!form.ok.checked) { msg.textContent = 'Please confirm that your report is honest and accurate.'; return; }
+      var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = 'Submitting…';
+      var email = '';
+      withToken(function (user, t) {
+        var p = me() || {}; email = user.email || '';
+        var rec = { appId: form.app.value, appName: form.app.options[form.app.selectedIndex].textContent, reason: form.reason.value, details: det.slice(0, 1000), uid: user.uid, username: p.username || '', status: 'open', ts: Date.now() };
+        if (ev) rec.evidence = ev;
+        return dbReq('POST', 'reports', rec, t).then(function (r) {
+          var key = r && r.name; if (!key) throw new Error('no key');
+          var mail = MAIL ? Promise.race([fetch(MAIL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'report', reportId: key, token: t }) }), new Promise(function (res) { setTimeout(res, 3500); })]).catch(function () { }) : Promise.resolve();
+          return mail.then(function () { return key; });
+        });
+      }).then(function (key) {
+        form.hidden = true; done.hidden = false; $('#rpRef').textContent = '#' + String(key).slice(-6).toUpperCase();
+        $('#rpMail').textContent = email ? 'A confirmation email is on its way to ' + email + '. Please also check your Spam folder.' : '';
+        window.scrollTo(0, 0);
+      }).catch(function (err) {
+        btn.disabled = false;
+        msg.textContent = err && err.message === 'signin' ? 'Please sign in again to send your report.' : 'Could not send the report. Please try again.';
+      });
+    });
+  })();
 
   /* ---------- app page ---------- */
   var app = $('.app');
@@ -704,4 +748,5 @@
         : err && err.message === 'profile' ? 'Finish your profile in the Library tab first.' : 'Could not post the review. Please try again.';
     });
   });
+
 })();
