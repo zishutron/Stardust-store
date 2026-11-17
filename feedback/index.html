@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>App feedback — UptoZishu</title>
+<meta name="description" content="Send feedback about an app on UptoZishu: ideas, bugs and compliments.">
+<link rel="canonical" href="https://uptozishu.zishuai.cloud/feedback/">
+<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="alternate" type="application/rss+xml" title="UptoZishu — new &amp; updated apps" href="https://uptozishu.zishuai.cloud/rss.xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="UptoZishu">
+<meta property="og:title" content="App feedback — UptoZishu">
+<meta property="og:description" content="Send feedback about an app on UptoZishu: ideas, bugs and compliments.">
+<meta property="og:url" content="https://uptozishu.zishuai.cloud/feedback/">
+<meta property="og:image" content="https://uptozishu.zishuai.cloud/favicon.png">
+<meta name="twitter:card" content="summary">
+<script>try{var t=localStorage.getItem('zt_theme')||localStorage.getItem('stardust_theme');if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}window.ZT={db:"https://stardust-store-default-rtdb.firebaseio.com",fb:{"apiKey":"AIzaSyDCOq720_5pxOsUYXovvi4DaUsryv1oPeA","authDomain":"stardust-store.firebaseapp.com","projectId":"stardust-store","appId":"1:979834482722:web:dabbc453543b7e03c91a7b"}};</script>
+<link rel="stylesheet" href="/assets/style.css?v=656348c7">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://uptozishu.zishuai.cloud/"},{"@type":"ListItem","position":2,"name":"App feedback"}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap hdr-in">
+    <a class="brand" href="/" aria-label="UptoZishu home"><img src="/favicon.png" width="34" height="34" alt=""><span>Upto<b>Zishu</b></span></a>
+    <nav class="nav" aria-label="Main"><a href="/">Home</a><a href="/apps/">Apps</a><a href="/top/">Top charts</a><a href="/library/">Library</a></nav>
+    <form class="search" role="search" action="/search/" method="get">
+      <input type="search" name="q" placeholder="Search apps…" autocomplete="off" aria-label="Search apps" enterkeyhint="search">
+      <button type="submit" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <div class="suggest" hidden></div>
+    </form>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  </div>
+  
+</header>
+<main id="main" class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><i>›</i><span aria-current="page">App feedback</span></nav><article class="doc"><h1 class="page-title">App feedback <small>help make apps better</small></h1><div id="rpGate" class="card rp-gate" hidden><h2>Sign in to send feedback</h2><p>Please sign in so we can follow up and avoid spam.</p><a class="btn btn-primary" id="rpSign" href="/library/">Sign in</a></div>
+<form class="form rp-form" id="fbForm" novalidate hidden>
+  <p class="muted">Your feedback goes to the UptoZishu team. It is not a public review, use the review box on the app page for that.</p>
+  <div class="rp-field"><span class="rp-lbl">Which app?</span><input type="hidden" name="app"><button type="button" class="rp-pick" id="rpPick" aria-haspopup="dialog"><span class="rp-pick-ico" id="rpPickIco"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span class="rp-pick-t" id="rpPickT">Choose an app…</span><svg class="rp-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></div>
+  <div id="rpSheet" class="rp-sheet" hidden><div class="rp-back" data-close></div><div class="rp-panel" role="dialog" aria-modal="true" aria-label="Choose an app"><div class="rp-grab"></div><div class="rp-sh"><b>Choose the app</b><button type="button" class="rp-x" data-close aria-label="Close">×</button></div><div class="rp-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rpQ" type="search" placeholder="Search apps by name" autocomplete="off" aria-label="Search apps"></div><div class="rp-list" id="rpList"></div></div></div>
+  <div class="rp-field"><span class="rp-lbl">Overall experience</span><div class="fb-stars" id="fbStars" role="radiogroup" aria-label="Overall experience"><button type="button" role="radio" aria-checked="false" data-s="1" aria-label="1 star">★</button><button type="button" role="radio" aria-checked="false" data-s="2" aria-label="2 stars">★</button><button type="button" role="radio" aria-checked="false" data-s="3" aria-label="3 stars">★</button><button type="button" role="radio" aria-checked="false" data-s="4" aria-label="4 stars">★</button><button type="button" role="radio" aria-checked="false" data-s="5" aria-label="5 stars">★</button><span class="muted" id="fbRateLbl"></span></div></div>
+  <fieldset class="rp-reasons"><legend>What kind of feedback is it?</legend>
+    <label class="rp-opt"><input type="radio" name="ftype" value="Suggestion" checked><span><b>Suggestion</b><small>An idea or something to improve</small></span></label><label class="rp-opt"><input type="radio" name="ftype" value="Bug or problem"><span><b>Bug or problem</b><small>Something does not work as it should</small></span></label><label class="rp-opt"><input type="radio" name="ftype" value="Compliment"><span><b>Compliment</b><small>Tell the developer what you enjoy</small></span></label><label class="rp-opt"><input type="radio" name="ftype" value="Question"><span><b>Question</b><small>You need help with the app</small></span></label><label class="rp-opt"><input type="radio" name="ftype" value="Other"><span><b>Other</b><small>Anything else</small></span></label>
+  </fieldset>
+  <div class="rp-field"><span class="rp-lbl">What is it about? (optional)</span><div class="fb-topics"><label class="fb-topic"><input type="checkbox" name="topic" value="Design and look"><span>Design and look</span></label><label class="fb-topic"><input type="checkbox" name="topic" value="Speed and performance"><span>Speed and performance</span></label><label class="fb-topic"><input type="checkbox" name="topic" value="Features"><span>Features</span></label><label class="fb-topic"><input type="checkbox" name="topic" value="Ads"><span>Ads</span></label><label class="fb-topic"><input type="checkbox" name="topic" value="Battery and data use"><span>Battery and data use</span></label><label class="fb-topic"><input type="checkbox" name="topic" value="Download and install"><span>Download and install</span></label><label class="fb-topic"><input type="checkbox" name="topic" value="Content"><span>Content</span></label></div></div>
+  <label>Your feedback<textarea name="msgtext" rows="5" maxlength="1000" placeholder="Tell us what happened or what you would like to see."></textarea><small class="muted"><span id="rpCount">0</span> / 1000 (at least 10 characters)</small></label>
+  <div class="fb-two"><label>Your phone<input name="device" maxlength="80" placeholder="e.g. Redmi Note 11, Android 13"></label><label>App version (optional)<input name="appver" maxlength="30" placeholder="e.g. 1.2.0"></label></div>
+  <div class="rp-field"><span class="rp-lbl">Screenshots (optional, up to 5)</span><div class="rp-shots" id="rpShots"></div><input type="file" id="rpFile" accept="image/*" multiple hidden></div>
+  <label class="rp-check"><input type="checkbox" name="contact"><span>The team may email me about this feedback.</span></label>
+  <div class="form-row"><button class="btn btn-primary" type="submit">Send feedback</button></div>
+  <p class="muted small" id="rpMsg" role="status"></p>
+</form>
+<div id="rpDone" class="card rp-done" hidden><div class="rp-tick"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 15-17"/></svg></div><h2>Thank you!</h2><p>Your feedback was sent to the UptoZishu team. Your reference is <b id="rpRef"></b>.</p><a class="btn btn-primary" href="/">Back to the store</a></div></article>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand"><a class="brand" href="/"><img src="/favicon.png" width="30" height="30" alt=""><span>Upto<b>Zishu</b></span></a>
+        <p>Free Android apps &amp; games, safe APK downloads. Every app is published by its developer and listed with its version, size and requirements.</p></div>
+      <div><h3>Explore</h3><a href="/apps/">All apps</a><a href="/top/">Top charts</a><a href="/library/">My library</a><a href="/rss.xml">RSS feed</a></div>
+      <div><h3>Company</h3><a href="https://zishutron.zishuai.cloud/">ZISHU TRON</a><a href="/about/">About</a><a href="/founder/">About Founder</a><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></div>
+      <div><h3>Support</h3><a href="/support/">Customer support</a><a href="https://dev.uptozishu.zishuai.cloud">Developer console</a><a href="/report/">Report an app</a><a href="/feedback/">Send feedback</a></div>
+      <div><h3>Join us</h3><a href="https://github.com/zishutron" target="_blank" rel="noopener">GitHub</a><a href="https://discord.gg/Xhh5r2UM5C" target="_blank" rel="noopener">Discord</a><a href="https://x.com/zishanstardust" target="_blank" rel="noopener">X (Twitter)</a><a href="https://youtube.com/@zishutron" target="_blank" rel="noopener">YouTube</a><a href="https://www.linkedin.com/in/zishutron" target="_blank" rel="noopener">LinkedIn</a></div>
+    </div>
+    <p class="copy">© 2026 ZISHU TRON · UptoZishu. App names, logos and trademarks belong to their respective owners.</p>
+  </div>
+</footer>
+<nav class="bottom-nav" aria-label="Primary">
+  <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10"/></svg><span>Home</span></a><a href="/search/"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span></a><a href="/top/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></svg><span>Top</span></a><a href="/library/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg><span>Library</span></a>
+</nav>
+<script src="/assets/app.js?v=656348c7" defer></script>
+</body>
+</html>
