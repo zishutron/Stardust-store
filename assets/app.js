@@ -425,34 +425,137 @@
   (function () {
     var form = $('#rpForm'); if (!form) return;
     var MAIL = 'https://script.google.com/macros/s/AKfycbxnsa5QzCWtto5671_JcJlefPOV9YcGlZUHMW9CrH1VuG0Qa8cNe94RLYpkFMC7G6Ga4g/exec';
+    var KEYS = ['550a3bcd47c1b0a86a9f2ba7a41770b6', '742851e212792d6bfc672313108289c0', 'bf18416a217228e4e067a94faa6c10a8', 'd75c4ca4974dc5b81fd0e1739da86b52', '36645f7ee1bc25d4b4e76c05cfef33d4', '89a6970a7e668212364be3a74c198aba', '721373c358c1f1d72259d8d8523b677a', '207a855fc5ff274c3c2380cfad628b4b', '736e4e92f0e1d37c2ddf9d68962b02c7', '0c4ee72d5170a06cde2bb96ebba382e1', '9fa796204c10145c452d16e329d708ff'];
     var gate = $('#rpGate'), done = $('#rpDone'), msg = $('#rpMsg'), pre = new URLSearchParams(location.search).get('app') || '';
+    var APPS = [], picked = null;
     $('#rpSign').href = '/library/?next=' + encodeURIComponent('/report/' + (pre ? '?app=' + encodeURIComponent(pre) : ''));
+
+    /* app picker: bottom sheet with search */
+    var sheet = $('#rpSheet'), list = $('#rpList'), q = $('#rpQ');
+    function esc2(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function setPicked(a) {
+      picked = a; form.app.value = a ? a.id : '';
+      $('#rpPickT').textContent = a ? a.name : 'Choose an app…';
+      $('#rpPick').classList.toggle('has', !!a);
+      $('#rpPickIco').innerHTML = a && a.icon ? '<img src="' + esc2(a.icon) + '" alt="">' : '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+    }
+    function drawList() {
+      var t = q.value.trim().toLowerCase();
+      var arr = APPS.filter(function (a) { return !t || (a.name + ' ' + (a.dev || '') + ' ' + (a.cat || '')).toLowerCase().indexOf(t) > -1; });
+      list.innerHTML = arr.length ? arr.map(function (a) {
+        return '<button type="button" class="rp-item' + (picked && picked.id === a.id ? ' on' : '') + '" data-id="' + esc2(a.id) + '"><img src="' + esc2(a.icon || '/favicon.png') + '" alt="" loading="lazy"><span><b>' + esc2(a.name) + '</b><small>' + esc2([a.dev, a.cat].filter(Boolean).join(' · ')) + '</small></span><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></button>';
+      }).join('') : '<div class="rp-none">' + (APPS.length ? 'No app matches "' + esc2(q.value.trim()) + '"' : 'Loading apps…') + '</div>';
+    }
+    function openSheet() { sheet.hidden = false; document.documentElement.classList.add('rp-lock'); drawList(); requestAnimationFrame(function () { sheet.classList.add('open'); }); setTimeout(function () { try { q.focus(); } catch (e) { } }, 250); }
+    function closeSheet() { sheet.classList.remove('open'); document.documentElement.classList.remove('rp-lock'); setTimeout(function () { sheet.hidden = true; }, 220); }
+    $('#rpPick').addEventListener('click', openSheet);
+    sheet.addEventListener('click', function (e) {
+      if (e.target.closest('[data-close]')) return closeSheet();
+      var it = e.target.closest('.rp-item'); if (!it) return;
+      setPicked(APPS.filter(function (a) { return a.id === it.dataset.id; })[0] || null); closeSheet();
+    });
+    q.addEventListener('input', drawList);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+
+    /* screenshots: pick from gallery, max 5, long press and drag to reorder */
+    var MAXS = 5, shots = [], box = $('#rpShots'), file = $('#rpFile'), drag = null;
+    function renderShots() {
+      box.innerHTML = '';
+      shots.forEach(function (it, i) {
+        var d = document.createElement('div'); d.className = 'rp-shot'; d._it = it;
+        d.innerHTML = '<img alt="Screenshot ' + (i + 1) + '" draggable="false"><span class="rp-n">' + (i + 1) + '</span><button type="button" class="rp-rm" aria-label="Remove screenshot ' + (i + 1) + '">×</button>';
+        d.querySelector('img').src = it.src;
+        d.querySelector('.rp-rm').onclick = function () { shots.splice(i, 1); URL.revokeObjectURL(it.src); renderShots(); };
+        d.addEventListener('pointerdown', function (e) { startHold(e, d); });
+        d.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        box.appendChild(d);
+      });
+      if (shots.length < MAXS) { var a = document.createElement('label'); a.className = 'rp-shot rp-add'; a.htmlFor = 'rpFile'; a.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><small>Add from gallery</small>'; box.appendChild(a); }
+      var h = document.createElement('div'); h.className = 'rp-hint';
+      h.textContent = shots.length > 1 ? 'Long press an image, then drag it to change the order. ' + shots.length + ' / ' + MAXS : shots.length ? shots.length + ' / ' + MAXS : 'Screenshots help us act faster. Max ' + MAXS + ' images.';
+      box.appendChild(h);
+    }
+    file.addEventListener('change', function () {
+      var skipped = 0;
+      Array.prototype.forEach.call(file.files, function (f) {
+        if (!/^image\//.test(f.type)) { skipped++; return; }
+        if (f.size > 8 * 1024 * 1024) { skipped++; return; }
+        if (shots.length >= MAXS) { skipped++; return; }
+        shots.push({ file: f, src: URL.createObjectURL(f) });
+      });
+      file.value = ''; renderShots();
+      if (skipped) msg.textContent = 'Some images were skipped: only the first ' + MAXS + ' pictures, up to 8 MB each, are accepted.';
+    });
+    function startHold(e, el) {
+      if (drag || e.target.closest('.rp-rm')) return; if (e.pointerType === 'mouse' && e.button !== 0) return;
+      drag = { el: el, id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false };
+      drag.t = setTimeout(function () {
+        if (!drag) return; drag.on = true; var r = el.getBoundingClientRect(); drag.dx = drag.x - r.left; drag.dy = drag.y - r.top;
+        var g = el.cloneNode(true); g.classList.add('rp-ghost'); g.style.width = r.width + 'px'; document.body.appendChild(g); drag.g = g; el.classList.add('drag');
+        if (navigator.vibrate) { try { navigator.vibrate(15); } catch (x) { } } moveGhost();
+      }, 350);
+    }
+    function moveGhost() {
+      drag.g.style.left = (drag.x - drag.dx) + 'px'; drag.g.style.top = (drag.y - drag.dy) + 'px';
+      var u = document.elementFromPoint(drag.x, drag.y), t = u && u.closest ? u.closest('.rp-shot') : null;
+      if (!t || t === drag.el || t.classList.contains('rp-add') || t.classList.contains('rp-ghost') || t.parentNode !== box) return;
+      var kids = Array.prototype.slice.call(box.children);
+      box.insertBefore(drag.el, kids.indexOf(drag.el) < kids.indexOf(t) ? t.nextSibling : t);
+    }
+    window.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return; drag.x = e.clientX; drag.y = e.clientY;
+      if (!drag.on) { if (Math.abs(drag.x - drag.x0) > 10 || Math.abs(drag.y - drag.y0) > 10) { clearTimeout(drag.t); drag = null; } return; }
+      e.preventDefault(); moveGhost();
+    }, { passive: false });
+    box.addEventListener('touchmove', function (e) { if (drag && drag.on) e.preventDefault(); }, { passive: false });
+    function endDrag(e) {
+      if (!drag || (e && e.pointerId !== drag.id)) return; clearTimeout(drag.t); var was = drag.on;
+      if (was) { drag.g.remove(); var order = Array.prototype.slice.call(box.querySelectorAll('.rp-shot:not(.rp-add)')).map(function (n) { return n._it; }).filter(Boolean); if (order.length === shots.length) shots = order; }
+      drag = null; if (was) renderShots();
+    }
+    window.addEventListener('pointerup', endDrag); window.addEventListener('pointercancel', endDrag);
+    renderShots();
+
+    function upload(f) {
+      var order = KEYS.slice().sort(function () { return Math.random() - .5; }), net = 0;
+      function go(i) {
+        if (i >= order.length || net >= 2) return Promise.reject(new Error('upload'));
+        var fd = new FormData(); fd.append('image', f);
+        return fetch('https://api.imgbb.com/1/upload?key=' + order[i], { method: 'POST', body: fd }).then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (d) { if (d && d.success && d.data && d.data.url) return d.data.url; return go(i + 1); }, function () { net++; return go(i + 1); });
+      }
+      return go(0);
+    }
+
     authUser().then(function (u) {
       if (!u) { gate.hidden = false; return; }
       form.hidden = false;
       loadIndex().then(function (apps) {
-        var sel = form.app; sel.innerHTML = '<option value="">Choose an app…</option>';
-        apps.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) { var o = document.createElement('option'); o.value = a.id; o.textContent = a.name; if (a.id === pre) o.selected = true; sel.appendChild(o); });
-      }).catch(function () { form.app.innerHTML = '<option value="">Could not load apps</option>'; });
+        APPS = apps.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+        var p = APPS.filter(function (a) { return a.id === pre; })[0]; if (p) setPicked(p);
+        if (!sheet.hidden) drawList();
+      }).catch(function () { $('#rpPickT').textContent = 'Could not load apps. Reload the page.'; });
     });
     form.details.addEventListener('input', function () { $('#rpCount').textContent = form.details.value.length; });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var det = form.details.value.trim(), ev = form.evidence.value.trim();
-      if (!form.app.value) { msg.textContent = 'Please choose the app you want to report.'; return; }
+      var det = form.details.value.trim();
+      if (!picked) { msg.textContent = 'Please choose the app you want to report.'; $('#rpPick').focus(); return; }
       if (det.length < 20) { msg.textContent = 'Please describe the problem in a few more words (at least 20 characters).'; return; }
-      if (ev && !/^https?:\/\/\S+\.\S+/i.test(ev)) { msg.textContent = 'The proof link must start with https://'; return; }
       if (!form.ok.checked) { msg.textContent = 'Please confirm that your report is honest and accurate.'; return; }
-      var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = 'Submitting…';
+      var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = shots.length ? 'Uploading images…' : 'Submitting…';
       var email = '';
-      withToken(function (user, t) {
-        var p = me() || {}; email = user.email || '';
-        var rec = { appId: form.app.value, appName: form.app.options[form.app.selectedIndex].textContent, reason: form.reason.value, details: det.slice(0, 1000), uid: user.uid, username: p.username || '', status: 'open', ts: Date.now() };
-        if (ev) rec.evidence = ev;
-        return dbReq('POST', 'reports', rec, t).then(function (r) {
-          var key = r && r.name; if (!key) throw new Error('no key');
-          var mail = MAIL ? Promise.race([fetch(MAIL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'report', reportId: key, token: t }) }), new Promise(function (res) { setTimeout(res, 3500); })]).catch(function () { }) : Promise.resolve();
-          return mail.then(function () { return key; });
+      Promise.all(shots.map(function (s) { return upload(s.file); })).then(function (urls) {
+        msg.textContent = 'Submitting…';
+        return withToken(function (user, t) {
+          var p = me() || {}; email = user.email || '';
+          var rec = { appId: picked.id, appName: picked.name, reason: form.reason.value, details: det.slice(0, 1000), uid: user.uid, username: p.username || '', status: 'open', ts: Date.now() };
+          if (urls.length) { rec.images = urls.slice(0, MAXS); rec.evidence = urls[0]; }
+          return dbReq('POST', 'reports', rec, t).then(function (r) {
+            var key = r && r.name; if (!key) throw new Error('no key');
+            var mail = MAIL ? Promise.race([fetch(MAIL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'report', reportId: key, token: t }) }), new Promise(function (res) { setTimeout(res, 4500); })]).catch(function () { }) : Promise.resolve();
+            return mail.then(function () { return key; });
+          });
         });
       }).then(function (key) {
         form.hidden = true; done.hidden = false; $('#rpRef').textContent = '#' + String(key).slice(-6).toUpperCase();
@@ -460,7 +563,7 @@
         window.scrollTo(0, 0);
       }).catch(function (err) {
         btn.disabled = false;
-        msg.textContent = err && err.message === 'signin' ? 'Please sign in again to send your report.' : 'Could not send the report. Please try again.';
+        msg.textContent = err && err.message === 'upload' ? 'An image could not be uploaded. Check your internet or remove it and try again.' : err && err.message === 'signin' ? 'Please sign in again to send your report.' : 'Could not send the report. Please try again.';
       });
     });
   })();
