@@ -124,6 +124,17 @@ async function loadReviews(apps) {
   return { data, known };
 }
 
+// storefront picks set by the admin: storefront/featured (home hero) and storefront/editors (Editor's choice), arrays of app ids
+let SF = { featured: [], editors: [] };
+async function loadStorefront() {
+  try {
+    const raw = process.env.STOREFRONT_FILE ? JSON.parse(await readFile(process.env.STOREFRONT_FILE, 'utf8')) : await getJson(`${DB}/storefront.json`, 2);
+    const ids = (v) => (Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : []).map(str).filter(Boolean);
+    return { featured: ids(raw && raw.featured), editors: ids(raw && raw.editors) };
+  } catch (e) { console.warn(`[build] storefront picks not readable (${e.message}); automatic picks are used`); return { featured: [], editors: [] }; }
+}
+const picked = (apps, ids) => ids.map((id) => apps.find((a) => a.id === id)).filter(Boolean);
+
 async function loadDevProfiles() {
   try {
     if (process.env.DEVS_FILE) return JSON.parse(await readFile(process.env.DEVS_FILE, 'utf8')) || {};
@@ -247,7 +258,8 @@ function buildCollections(apps) {
   for (let i = 0; discover.length < apps.length; i++) { let added = false; for (const l of lists) if (l[i]) { discover.push(l[i]); added = true; } if (!added) break; }
   // Editor's choice: apps marked verified; until some are, the best rated apps that have a feature banner
   const verified = pop.filter((a) => a.verified);
-  const editors = verified.length ? verified : [...apps].filter((a) => a.banner && a.rc > 0).sort(byRate);
+  const chosen = picked(apps, SF.editors); // the admin's own list wins; with none picked the automatic list is used
+  const editors = chosen.length ? chosen : verified.length ? verified : [...apps].filter((a) => a.banner && a.rc > 0).sort(byRate);
   return [
     { key: 'discover', path: '/discover/', name: 'Discover', apps: discover, title: 'Discover New Android Apps & Games', intro: `A fresh mix of the best apps and games from every category on ${SITE}.` },
     { key: 'popular-apps', path: '/popular-apps/', name: 'Popular Apps', apps: pop.filter((a) => a.catSlug !== 'games'), title: 'Popular Android Apps — Most Downloaded', intro: 'The most downloaded Android apps on UptoZishu.' },
@@ -346,7 +358,8 @@ function homePage(apps, cats) {
   const popular = [...apps].sort(byDl);
   // hero slides use the developer's "Feature Banner" as background; only apps that have one are featured
   const withBanner = popular.filter((a) => a.banner);
-  const heroPool = (withBanner.length ? withBanner : popular).slice(0, 5);
+  const chosenHero = picked(apps, SF.featured).slice(0, 8);
+  const heroPool = chosenHero.length ? chosenHero : (withBanner.length ? withBanner : popular).slice(0, 5);
   const hero = heroPool.length ? `<section class="hero" aria-label="Featured apps">${heroPool.map((a, i) => `
     <a class="hero-slide" href="${a.path}">${a.banner ? `<img class="hero-bg" src="${esc(a.banner)}" alt="" ${i ? 'loading="lazy"' : 'fetchpriority="high"'} decoding="async">` : ''}
       <span class="hero-body"><img class="ic" src="${esc(a.icon)}" width="72" height="72" alt="">
@@ -671,7 +684,7 @@ function devPage(d, cats) {
     <div class="dev-id">
       ${logo ? `<img class="dev-logo" src="${esc(logo)}" width="104" height="104" alt="${esc(d.name)} logo">` : `<span class="dev-logo avatar ${color}" aria-hidden="true">${esc(initial)}</span>`}
       <div class="dev-name">
-        <h1>${esc(d.name)}${d.verified ? ` <span class="verified" title="Verified developer">${svg.shield}Verified</span>` : ''}</h1>
+        <h1>${esc(d.name)}${d.verified ? ` <span class="verified" title="Verified developer">${svg.shield}Verified</span>` : ` <span class="verified no" title="Not verified by UptoZishu">${svg.shield}Unverified</span>`}</h1>
         <p class="dev-sub">@${esc(d.slug)}${type ? ` · ${esc(type)}` : ''}</p>
       </div>
     </div>
@@ -727,8 +740,8 @@ function appPage(a, apps, cats) {
   <header class="app-head">
     <img class="app-ic" src="${esc(a.icon)}" width="112" height="112" alt="${esc(a.name)} icon" fetchpriority="high">
     <div class="app-main">
-      <h1>${esc(a.name)}${a.verified ? ` <span class="verified" title="Verified developer">${svg.shield}Verified</span>` : ''}</h1>
-      <p class="dev">${a.devPath ? `<a href="${a.devPath}" title="View developer profile">${esc(a.dev)}</a>` : esc(a.dev)}${a.devVerified ? ` <span class="verified sm" title="Verified developer">${svg.shield}</span>` : ''}</p>
+      <h1>${esc(a.name)}</h1>
+      <p class="dev">${a.devPath ? `<a href="${a.devPath}" title="View developer profile">${esc(a.dev)}</a>` : esc(a.dev)}${a.devVerified ? ` <span class="verified" title="This developer is verified by UptoZishu">${svg.shield}Verified</span>` : ` <span class="verified no" title="This developer has not been verified by UptoZishu">${svg.shield}Unverified</span>`}</p>
       <ul class="facts">
         <li><b>${a.rc > 0 ? `${a.rating.toFixed(1)} <span class="star">★</span>` : 'New'}</b><small>${a.rc > 0 ? `${fmtCount(a.rc)} ${a.rc === 1 ? 'review' : 'reviews'}` : 'no reviews'}</small></li>
         <li><b id="dlCount" data-dl="${a.dl}">${fmtCount(a.dl)}</b><small>downloads</small></li>
@@ -825,6 +838,7 @@ async function main() {
   const rawApps = await loadApps();
   const { data: reviews, known } = await loadReviews(rawApps.filter((a) => LIVE.has(str(a.status).toLowerCase())));
   const apps = normalize(rawApps, reviews, known);
+  SF = await loadStorefront();
   const DEVS = buildDevs(apps, await loadDevProfiles());
   console.log(`[build] ${rawApps.length} app record(s), ${apps.length} live`);
 
