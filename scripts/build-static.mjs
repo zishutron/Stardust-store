@@ -333,7 +333,7 @@ ${body}
         <p>${esc(TAGLINE)}. Every app is published by its developer and listed with its version, size and requirements.</p></div>
       <div><h3>Explore</h3><a href="/apps/">All apps</a><a href="/top/">Top charts</a><a href="/library/">My library</a><a href="/rss.xml">RSS feed</a></div>
       <div><h3>Company</h3><a href="${esc(MAIN_URL)}/">ZISHU TRON</a><a href="/about/">About</a><a href="/founder/">About Founder</a><a href="/privacy.html">Privacy policy</a><a href="/terms.html">Terms of service</a></div>
-      <div><h3>Support</h3><a href="/support/">Customer support</a>${CONSOLE_URL ? `<a href="${esc(CONSOLE_URL)}">Developer console</a>` : ''}<a href="/report/">Report an app</a></div>
+      <div><h3>Support</h3><a href="/support/">Customer support</a>${CONSOLE_URL ? `<a href="${esc(CONSOLE_URL)}">Developer console</a>` : ''}<a href="/report/">Report an app</a><a href="/feedback/">Send feedback</a></div>
       <div><h3>Join us</h3>${SOCIALS.map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join('')}</div>
     </div>
     <p class="copy">© ${new Date().getFullYear()} ZISHU TRON · ${SITE}. App names, logos and trademarks belong to their respective owners.</p>
@@ -585,6 +585,29 @@ const reportPage = (cats) => infoPage({ cats, path: '/report/', title: `Report a
 </form>
 <div id="rpDone" class="card rp-done" hidden><div class="rp-tick"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 15-17"/></svg></div><h2>Report submitted</h2><p>Thank you for helping keep ${SITE} safe. Your reference is <b id="rpRef"></b>.</p><p class="muted" id="rpMail"></p><a class="btn btn-primary" href="/">Back to the store</a></div>` });
 
+const FEEDBACK_TYPES = [['Suggestion', 'An idea or something to improve'], ['Bug or problem', 'Something does not work as it should'], ['Compliment', 'Tell the developer what you enjoy'], ['Question', 'You need help with the app'], ['Other', 'Anything else']];
+const FEEDBACK_TOPICS = ['Design and look', 'Speed and performance', 'Features', 'Ads', 'Battery and data use', 'Download and install', 'Content'];
+const feedbackPage = (cats) => infoPage({ cats, path: '/feedback/', title: `App feedback — ${SITE}`, h1: 'App feedback', sub: 'help make apps better',
+  desc: `Send feedback about an app on ${SITE}: ideas, bugs and compliments.`,
+  inner: `<div id="rpGate" class="card rp-gate" hidden><h2>Sign in to send feedback</h2><p>Please sign in so we can follow up and avoid spam.</p><a class="btn btn-primary" id="rpSign" href="/library/">Sign in</a></div>
+<form class="form rp-form" id="fbForm" novalidate hidden>
+  <p class="muted">Your feedback goes to the ${SITE} team. It is not a public review, use the review box on the app page for that.</p>
+  <div class="rp-field"><span class="rp-lbl">Which app?</span><input type="hidden" name="app"><button type="button" class="rp-pick" id="rpPick" aria-haspopup="dialog"><span class="rp-pick-ico" id="rpPickIco"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span class="rp-pick-t" id="rpPickT">Choose an app…</span><svg class="rp-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></div>
+  <div id="rpSheet" class="rp-sheet" hidden><div class="rp-back" data-close></div><div class="rp-panel" role="dialog" aria-modal="true" aria-label="Choose an app"><div class="rp-grab"></div><div class="rp-sh"><b>Choose the app</b><button type="button" class="rp-x" data-close aria-label="Close">×</button></div><div class="rp-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rpQ" type="search" placeholder="Search apps by name" autocomplete="off" aria-label="Search apps"></div><div class="rp-list" id="rpList"></div></div></div>
+  <div class="rp-field"><span class="rp-lbl">Overall experience</span><div class="fb-stars" id="fbStars" role="radiogroup" aria-label="Overall experience">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="false" data-s="${n}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}<span class="muted" id="fbRateLbl"></span></div></div>
+  <fieldset class="rp-reasons"><legend>What kind of feedback is it?</legend>
+    ${FEEDBACK_TYPES.map(([r, h], i) => `<label class="rp-opt"><input type="radio" name="ftype" value="${esc(r)}"${i === 0 ? ' checked' : ''}><span><b>${esc(r)}</b><small>${esc(h)}</small></span></label>`).join('')}
+  </fieldset>
+  <div class="rp-field"><span class="rp-lbl">What is it about? (optional)</span><div class="fb-topics">${FEEDBACK_TOPICS.map((t) => `<label class="fb-topic"><input type="checkbox" name="topic" value="${esc(t)}"><span>${esc(t)}</span></label>`).join('')}</div></div>
+  <label>Your feedback<textarea name="msgtext" rows="5" maxlength="1000" placeholder="Tell us what happened or what you would like to see."></textarea><small class="muted"><span id="rpCount">0</span> / 1000 (at least 10 characters)</small></label>
+  <div class="fb-two"><label>Your phone<input name="device" maxlength="80" placeholder="e.g. Redmi Note 11, Android 13"></label><label>App version (optional)<input name="appver" maxlength="30" placeholder="e.g. 1.2.0"></label></div>
+  <div class="rp-field"><span class="rp-lbl">Screenshots (optional, up to 5)</span><div class="rp-shots" id="rpShots"></div><input type="file" id="rpFile" accept="image/*" multiple hidden></div>
+  <label class="rp-check"><input type="checkbox" name="contact"><span>The team may email me about this feedback.</span></label>
+  <div class="form-row"><button class="btn btn-primary" type="submit">Send feedback</button></div>
+  <p class="muted small" id="rpMsg" role="status"></p>
+</form>
+<div id="rpDone" class="card rp-done" hidden><div class="rp-tick"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 15-17"/></svg></div><h2>Thank you!</h2><p>Your feedback was sent to the ${SITE} team. Your reference is <b id="rpRef"></b>.</p><a class="btn btn-primary" href="/">Back to the store</a></div>` });
+
 const supportPage = (cats) => infoPage({ cats, path: '/support/', title: `Customer support — ${SITE}`, h1: 'Customer support', sub: 'we read every message',
   desc: `Need help with ${SITE}? Contact customer support by email for download problems, app reports and feedback.`,
   inner: `<div class="card support-card"><p>Email us at</p><p><a class="mail" href="mailto:${esc(SUPPORT_EMAIL)}">${esc(SUPPORT_EMAIL)}</a></p><a class="btn btn-primary" href="mailto:${esc(SUPPORT_EMAIL)}">Send an email</a></div>
@@ -741,7 +764,7 @@ function appPage(a, apps, cats) {
     <img class="app-ic" src="${esc(a.icon)}" width="112" height="112" alt="${esc(a.name)} icon" fetchpriority="high">
     <div class="app-main">
       <h1>${esc(a.name)}</h1>
-      <p class="dev">${a.devPath ? `<a href="${a.devPath}" title="View developer profile">${esc(a.dev)}</a>` : esc(a.dev)}${a.devVerified ? ` <span class="verified" title="This developer is verified by UptoZishu">${svg.shield}Verified</span>` : ` <span class="verified no" title="This developer has not been verified by UptoZishu">${svg.shield}Unverified</span>`}</p>
+      <p class="dev">${a.devPath ? `<a href="${a.devPath}" title="View developer profile">${esc(a.dev)}</a>` : esc(a.dev)}</p>
       <ul class="facts">
         <li><b>${a.rc > 0 ? `${a.rating.toFixed(1)} <span class="star">★</span>` : 'New'}</b><small>${a.rc > 0 ? `${fmtCount(a.rc)} ${a.rc === 1 ? 'review' : 'reviews'}` : 'no reviews'}</small></li>
         <li><b id="dlCount" data-dl="${a.dl}">${fmtCount(a.dl)}</b><small>downloads</small></li>
@@ -757,6 +780,8 @@ function appPage(a, apps, cats) {
   <section class="sec prose"><h2>About ${esc(a.name)}</h2><div class="clamp" id="desc">${paras}</div><button class="linkbtn more" id="descMore" type="button" aria-expanded="false" aria-controls="desc" hidden>Show more</button>${a.tags.length ? `<div class="chips">${a.tags.map((t) => `<a class="chip" href="/search/?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>` : ''}</section>
   ${a.whatsNew.length ? `<section class="sec"><h2>What’s new in ${esc(a.version)}</h2><ul class="wn">${a.whatsNew.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>` : ''}
   <section class="sec"><h2>App information</h2><dl class="info">${info}</dl></section>
+  <section class="sec" id="dev-verification"><h2>Developer verification</h2><div class="card vf ${a.devVerified ? 'ok' : 'no'}"><div class="vf-ic">${svg.shield}</div><div><b>${a.devVerified ? 'Verified developer' : 'Unverified developer'}</b><p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet. Install only if you trust this developer.`}</p></div></div></section>
+  <section class="sec" id="feedback"><h2>Feedback</h2><div class="card vf fb"><div class="vf-ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></div><div><b>Tell us what you think</b><p>Found a bug, have an idea, or just like the app? Send feedback about ${esc(a.name)}.</p><a class="btn btn-ghost" href="/feedback/?app=${encodeURIComponent(a.id)}">Send feedback</a></div></div></section>
   ${a.history.length > 1 ? `<section class="sec"><h2>Version history</h2><div class="chips">${[...a.history].reverse().map((v) => `<span class="chip">${esc(v)}</span>`).join('')}</div></section>` : ''}
   <section class="sec" id="permissions"><h2>App permissions</h2>${a.permissions.length
     ? `<p class="muted">Declared by the developer. This app may ask for access to:</p><ul class="perms">${a.permissions.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
@@ -903,6 +928,7 @@ async function main() {
     await write('about/index.html', aboutPage(cats));
     await write('support/index.html', supportPage(cats));
     await write('report/index.html', reportPage(cats));
+    await write('feedback/index.html', feedbackPage(cats));
     await write('founder/index.html', founderPage(cats));
     await write('privacy.html', privacyPage(cats));
     await write('terms.html', termsPage(cats));
