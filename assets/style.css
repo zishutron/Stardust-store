@@ -451,4 +451,24 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .rp-ghost{position:fixed;z-index:9999;pointer-events:none;transform:scale(1.08);box-shadow:0 12px 30px rgba(0,0,0,.4);margin:0}
 .rp-hint{flex-basis:100%;font-size:12.5px;color:var(--muted)}
 
-.verified.no{color:var(--muted);background:var(--soft);font-weight:600}
+.verified.no{color:#d97706;background:color-mix(in srgb,#f59e0b 16%,transparent);font-weight:700}
+
+/* developer verification + feedback */
+.vf{display:flex;gap:14px;align-items:flex-start;padding:16px}
+.vf-ic{flex:0 0 44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--soft)}
+.vf-ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vf b{display:block;font-size:16px;margin-bottom:2px}.vf p{color:var(--muted);font-size:14px;margin:0 0 4px}
+.vf.ok .vf-ic{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}.vf.ok b{color:var(--ok)}
+.vf.no .vf-ic{color:#d97706;background:color-mix(in srgb,#f59e0b 16%,transparent)}.vf.no b{color:#d97706}
+.vf.fb .vf-ic{color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,transparent)}.vf.fb .btn{margin-top:8px}
+.fb-stars{display:flex;align-items:center;gap:4px}
+.fb-stars button{background:none;border:0;font-size:34px;line-height:1;color:var(--line);cursor:pointer;padding:2px;transition:transform .12s,color .12s}
+.fb-stars button.on{color:#f59e0b}.fb-stars button:active{transform:scale(1.2)}
+.fb-stars .muted{margin-left:8px;font-size:14px}
+.fb-topics{display:flex;flex-wrap:wrap;gap:8px}
+.fb-topic input{position:absolute;opacity:0;pointer-events:none}
+.fb-topic span{display:inline-block;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-size:13.5px;cursor:pointer;user-select:none}
+.fb-topic input:checked+span{background:color-mix(in srgb,var(--brand) 16%,transparent);border-color:var(--brand);color:var(--brand);font-weight:600}
+.fb-topic input:focus-visible+span{outline:2px solid var(--brand);outline-offset:2px}
+.fb-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.fb-two{grid-template-columns:1fr}}

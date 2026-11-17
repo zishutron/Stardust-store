@@ -421,18 +421,23 @@
     }
   }
 
-  /* ---------- report an app (ticket-style screen) ---------- */
-  (function () {
-    var form = $('#rpForm'); if (!form) return;
-    var MAIL = 'https://script.google.com/macros/s/AKfycbxnsa5QzCWtto5671_JcJlefPOV9YcGlZUHMW9CrH1VuG0Qa8cNe94RLYpkFMC7G6Ga4g/exec';
-    var KEYS = ['550a3bcd47c1b0a86a9f2ba7a41770b6', '742851e212792d6bfc672313108289c0', 'bf18416a217228e4e067a94faa6c10a8', 'd75c4ca4974dc5b81fd0e1739da86b52', '36645f7ee1bc25d4b4e76c05cfef33d4', '89a6970a7e668212364be3a74c198aba', '721373c358c1f1d72259d8d8523b677a', '207a855fc5ff274c3c2380cfad628b4b', '736e4e92f0e1d37c2ddf9d68962b02c7', '0c4ee72d5170a06cde2bb96ebba382e1', '9fa796204c10145c452d16e329d708ff'];
-    var gate = $('#rpGate'), done = $('#rpDone'), msg = $('#rpMsg'), pre = new URLSearchParams(location.search).get('app') || '';
-    var APPS = [], picked = null;
-    $('#rpSign').href = '/library/?next=' + encodeURIComponent('/report/' + (pre ? '?app=' + encodeURIComponent(pre) : ''));
-
-    /* app picker: bottom sheet with search */
-    var sheet = $('#rpSheet'), list = $('#rpList'), q = $('#rpQ');
-    function esc2(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  /* ---------- shared pieces for the report and feedback screens ---------- */
+  var IMG_KEYS = ['550a3bcd47c1b0a86a9f2ba7a41770b6', '742851e212792d6bfc672313108289c0', 'bf18416a217228e4e067a94faa6c10a8', 'd75c4ca4974dc5b81fd0e1739da86b52', '36645f7ee1bc25d4b4e76c05cfef33d4', '89a6970a7e668212364be3a74c198aba', '721373c358c1f1d72259d8d8523b677a', '207a855fc5ff274c3c2380cfad628b4b', '736e4e92f0e1d37c2ddf9d68962b02c7', '0c4ee72d5170a06cde2bb96ebba382e1', '9fa796204c10145c452d16e329d708ff'];
+  var MAIL_URL = 'https://script.google.com/macros/s/AKfycbxnsa5QzCWtto5671_JcJlefPOV9YcGlZUHMW9CrH1VuG0Qa8cNe94RLYpkFMC7G6Ga4g/exec';
+  function esc2(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function uploadImg(f) {
+    var order = IMG_KEYS.slice().sort(function () { return Math.random() - .5; }), net = 0;
+    function go(i) {
+      if (i >= order.length || net >= 2) return Promise.reject(new Error('upload'));
+      var fd = new FormData(); fd.append('image', f);
+      return fetch('https://api.imgbb.com/1/upload?key=' + order[i], { method: 'POST', body: fd }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (d) { if (d && d.success && d.data && d.data.url) return d.data.url; return go(i + 1); }, function () { net++; return go(i + 1); });
+    }
+    return go(0);
+  }
+  // app picker: bottom sheet with search; needs #rpPick #rpPickIco #rpPickT #rpSheet #rpList #rpQ in the page
+  function appPicker(form, pre) {
+    var sheet = $('#rpSheet'), list = $('#rpList'), q = $('#rpQ'), APPS = [], picked = null;
     function setPicked(a) {
       picked = a; form.app.value = a ? a.id : '';
       $('#rpPickT').textContent = a ? a.name : 'Choose an app…';
@@ -456,8 +461,19 @@
     });
     q.addEventListener('input', drawList);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
-
-    /* screenshots: pick from gallery, max 5, long press and drag to reorder */
+    return {
+      get: function () { return picked; },
+      load: function () {
+        return loadIndex().then(function (apps) {
+          APPS = apps.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+          var p = APPS.filter(function (a) { return a.id === pre; })[0]; if (p) setPicked(p);
+          if (!sheet.hidden) drawList();
+        }).catch(function () { $('#rpPickT').textContent = 'Could not load apps. Reload the page.'; });
+      }
+    };
+  }
+  // screenshots: pick from gallery, max 5, long press and drag to reorder; needs #rpShots #rpFile
+  function shotPicker(msg) {
     var MAXS = 5, shots = [], box = $('#rpShots'), file = $('#rpFile'), drag = null;
     function renderShots() {
       box.innerHTML = '';
@@ -478,9 +494,7 @@
     file.addEventListener('change', function () {
       var skipped = 0;
       Array.prototype.forEach.call(file.files, function (f) {
-        if (!/^image\//.test(f.type)) { skipped++; return; }
-        if (f.size > 8 * 1024 * 1024) { skipped++; return; }
-        if (shots.length >= MAXS) { skipped++; return; }
+        if (!/^image\//.test(f.type) || f.size > 8 * 1024 * 1024 || shots.length >= MAXS) { skipped++; return; }
         shots.push({ file: f, src: URL.createObjectURL(f) });
       });
       file.value = ''; renderShots();
@@ -515,46 +529,38 @@
     }
     window.addEventListener('pointerup', endDrag); window.addEventListener('pointercancel', endDrag);
     renderShots();
+    return { uploadAll: function () { return Promise.all(shots.map(function (s) { return uploadImg(s.file); })); }, count: function () { return shots.length; } };
+  }
+  function pingMail(type, idField, key, token) {
+    var body = { type: type, token: token }; body[idField] = key;
+    return MAIL_URL ? Promise.race([fetch(MAIL_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }), new Promise(function (res) { setTimeout(res, 4500); })]).catch(function () { }) : Promise.resolve();
+  }
 
-    function upload(f) {
-      var order = KEYS.slice().sort(function () { return Math.random() - .5; }), net = 0;
-      function go(i) {
-        if (i >= order.length || net >= 2) return Promise.reject(new Error('upload'));
-        var fd = new FormData(); fd.append('image', f);
-        return fetch('https://api.imgbb.com/1/upload?key=' + order[i], { method: 'POST', body: fd }).then(function (r) { return r.json().catch(function () { return {}; }); })
-          .then(function (d) { if (d && d.success && d.data && d.data.url) return d.data.url; return go(i + 1); }, function () { net++; return go(i + 1); });
-      }
-      return go(0);
-    }
-
-    authUser().then(function (u) {
-      if (!u) { gate.hidden = false; return; }
-      form.hidden = false;
-      loadIndex().then(function (apps) {
-        APPS = apps.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
-        var p = APPS.filter(function (a) { return a.id === pre; })[0]; if (p) setPicked(p);
-        if (!sheet.hidden) drawList();
-      }).catch(function () { $('#rpPickT').textContent = 'Could not load apps. Reload the page.'; });
-    });
+  /* ---------- report an app (ticket-style screen) ---------- */
+  (function () {
+    var form = $('#rpForm'); if (!form) return;
+    var gate = $('#rpGate'), done = $('#rpDone'), msg = $('#rpMsg'), pre = new URLSearchParams(location.search).get('app') || '';
+    $('#rpSign').href = '/library/?next=' + encodeURIComponent('/report/' + (pre ? '?app=' + encodeURIComponent(pre) : ''));
+    var pk = appPicker(form, pre), sp = shotPicker(msg);
+    authUser().then(function (u) { if (!u) { gate.hidden = false; return; } form.hidden = false; pk.load(); });
     form.details.addEventListener('input', function () { $('#rpCount').textContent = form.details.value.length; });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var det = form.details.value.trim();
+      var det = form.details.value.trim(), picked = pk.get();
       if (!picked) { msg.textContent = 'Please choose the app you want to report.'; $('#rpPick').focus(); return; }
       if (det.length < 20) { msg.textContent = 'Please describe the problem in a few more words (at least 20 characters).'; return; }
       if (!form.ok.checked) { msg.textContent = 'Please confirm that your report is honest and accurate.'; return; }
-      var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = shots.length ? 'Uploading images…' : 'Submitting…';
+      var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = sp.count() ? 'Uploading images…' : 'Submitting…';
       var email = '';
-      Promise.all(shots.map(function (s) { return upload(s.file); })).then(function (urls) {
+      sp.uploadAll().then(function (urls) {
         msg.textContent = 'Submitting…';
         return withToken(function (user, t) {
           var p = me() || {}; email = user.email || '';
           var rec = { appId: picked.id, appName: picked.name, reason: form.reason.value, details: det.slice(0, 1000), uid: user.uid, username: p.username || '', status: 'open', ts: Date.now() };
-          if (urls.length) { rec.images = urls.slice(0, MAXS); rec.evidence = urls[0]; }
+          if (urls.length) { rec.images = urls.slice(0, 5); rec.evidence = urls[0]; }
           return dbReq('POST', 'reports', rec, t).then(function (r) {
             var key = r && r.name; if (!key) throw new Error('no key');
-            var mail = MAIL ? Promise.race([fetch(MAIL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ type: 'report', reportId: key, token: t }) }), new Promise(function (res) { setTimeout(res, 4500); })]).catch(function () { }) : Promise.resolve();
-            return mail.then(function () { return key; });
+            return pingMail('report', 'reportId', key, t).then(function () { return key; });
           });
         });
       }).then(function (key) {
@@ -564,6 +570,52 @@
       }).catch(function (err) {
         btn.disabled = false;
         msg.textContent = err && err.message === 'upload' ? 'An image could not be uploaded. Check your internet or remove it and try again.' : err && err.message === 'signin' ? 'Please sign in again to send your report.' : 'Could not send the report. Please try again.';
+      });
+    });
+  })();
+
+  /* ---------- feedback about an app ---------- */
+  (function () {
+    var form = $('#fbForm'); if (!form) return;
+    var gate = $('#rpGate'), done = $('#rpDone'), msg = $('#rpMsg'), pre = new URLSearchParams(location.search).get('app') || '';
+    $('#rpSign').href = '/library/?next=' + encodeURIComponent('/feedback/' + (pre ? '?app=' + encodeURIComponent(pre) : ''));
+    var pk = appPicker(form, pre), sp = shotPicker(msg), rating = 0;
+    // device info is guessed from the browser, the person can fix it
+    var ua = navigator.userAgent || '', am = ua.match(/Android\s([\d.]+)/), dm = ua.match(/;\s([^;)]+?)\sBuild\//) || ua.match(/Android[\d.\s]*;\s([^;)]+)\)/);
+    form.device.value = [dm && dm[1] && dm[1].trim(), am && 'Android ' + am[1]].filter(Boolean).join(', ');
+    var stars = $('#fbStars'), lab = $('#fbRateLbl'), LAB = ['', 'Poor', 'Could be better', 'Okay', 'Good', 'Excellent'];
+    stars.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-s]'); if (!b) return; rating = +b.dataset.s;
+      Array.prototype.forEach.call(stars.children, function (x) { x.classList.toggle('on', +x.dataset.s <= rating); x.setAttribute('aria-checked', String(+x.dataset.s === rating)); });
+      lab.textContent = LAB[rating];
+    });
+    form.msgtext.addEventListener('input', function () { $('#rpCount').textContent = form.msgtext.value.length; });
+    authUser().then(function (u) { if (!u) { gate.hidden = false; return; } form.hidden = false; pk.load(); });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var txt = form.msgtext.value.trim(), picked = pk.get();
+      if (!picked) { msg.textContent = 'Please choose the app your feedback is about.'; $('#rpPick').focus(); return; }
+      if (!rating) { msg.textContent = 'Please give a star rating for your overall experience.'; return; }
+      if (txt.length < 10) { msg.textContent = 'Please write a little more (at least 10 characters).'; return; }
+      var btn = $('button[type=submit]', form); btn.disabled = true; msg.textContent = sp.count() ? 'Uploading images…' : 'Sending…';
+      var topics = Array.prototype.map.call(form.querySelectorAll('input[name=topic]:checked'), function (x) { return x.value; });
+      sp.uploadAll().then(function (urls) {
+        msg.textContent = 'Sending…';
+        return withToken(function (user, t) {
+          var p = me() || {};
+          var rec = { appId: picked.id, appName: picked.name, type: form.ftype.value, rating: rating, message: txt.slice(0, 1000), uid: user.uid, username: p.username || '', status: 'new', ts: Date.now() };
+          if (topics.length) rec.topics = topics;
+          if (form.device.value.trim()) rec.device = form.device.value.trim().slice(0, 80);
+          if (form.appver.value.trim()) rec.appVersion = form.appver.value.trim().slice(0, 30);
+          if (urls.length) rec.images = urls.slice(0, 5);
+          if (form.contact.checked && user.email) { rec.contactOk = true; rec.email = user.email; }
+          return dbReq('POST', 'feedback', rec, t).then(function (r) { if (!(r && r.name)) throw new Error('no key'); return r.name; });
+        });
+      }).then(function (key) {
+        form.hidden = true; done.hidden = false; $('#rpRef').textContent = '#' + String(key).slice(-6).toUpperCase(); window.scrollTo(0, 0);
+      }).catch(function (err) {
+        btn.disabled = false;
+        msg.textContent = err && err.message === 'upload' ? 'An image could not be uploaded. Check your internet or remove it and try again.' : err && err.message === 'signin' ? 'Please sign in again to send your feedback.' : 'Could not send your feedback. Please try again.';
       });
     });
   })();
