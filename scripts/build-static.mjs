@@ -125,13 +125,15 @@ async function loadReviews(apps) {
 }
 
 // storefront picks set by the admin: storefront/featured (home hero) and storefront/editors (Editor's choice), arrays of app ids
-let SF = { featured: [], editors: [] };
+let SF = { featured: [], editors: [], sponsored: [] };
 async function loadStorefront() {
   try {
     const raw = process.env.STOREFRONT_FILE ? JSON.parse(await readFile(process.env.STOREFRONT_FILE, 'utf8')) : await getJson(`${DB}/storefront.json`, 2);
     const ids = (v) => (Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : []).map(str).filter(Boolean);
-    return { featured: ids(raw && raw.featured), editors: ids(raw && raw.editors) };
-  } catch (e) { console.warn(`[build] storefront picks not readable (${e.message}); automatic picks are used`); return { featured: [], editors: [] }; }
+    // paid placements carry an end date in storefront/<list>Until/<appId>; an expired app drops out by itself on the next rebuild
+    const live = (list, until) => ids(list).filter((id) => { const t = Number(until && until[id]); return !t || t > Date.now(); });
+    return { featured: live(raw && raw.featured, raw && raw.featuredUntil), editors: ids(raw && raw.editors), sponsored: live(raw && raw.sponsored, raw && raw.sponsoredUntil) };
+  } catch (e) { console.warn(`[build] storefront picks not readable (${e.message}); automatic picks are used`); return { featured: [], editors: [], sponsored: [] }; }
 }
 const picked = (apps, ids) => ids.map((id) => apps.find((a) => a.id === id)).filter(Boolean);
 
@@ -372,6 +374,7 @@ function homePage(apps, cats) {
   const body = `
 <h1 class="sr-only">${SITE} — ${esc(TAGLINE)}</h1>
 ${hero}
+${shelf('Sponsored', picked(apps, SF.sponsored).slice(0, 15), '')}
 ${colRails.join('\n')}
 ${shelf('New releases', [...apps].sort(byNew).slice(0, 10), '/apps/')}
 ${shelf('Recently updated', [...apps].sort(byUpd).slice(0, 10), '/top/#updated')}
@@ -417,7 +420,7 @@ function searchPage(apps, cats) {
 <div class="chips" id="filters"><button class="chip on" data-f="all" type="button">All</button><button class="chip" data-f="name" type="button">Name</button><button class="chip" data-f="dev" type="button">Developer</button><button class="chip" data-f="cat" type="button">Category</button></div>
 <p class="muted" id="count" aria-live="polite"></p>
 <div class="grid" id="results"></div>
-<div id="fallback">${rowsSection('Popular apps', [...apps].sort(byDl).slice(0, 12))}</div>`;
+<div id="fallback">${rowsSection('Sponsored', picked(apps, SF.sponsored).slice(0, 10))}</div>`;
   return layout({ title: `Search apps — ${SITE}`, desc: 'Search every app and game on UptoZishu.', path: '/search/', body, page: 'search', cats, noindex: true });
 }
 
