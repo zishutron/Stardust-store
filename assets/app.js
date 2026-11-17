@@ -451,8 +451,8 @@
         return '<button type="button" class="rp-item' + (picked && picked.id === a.id ? ' on' : '') + '" data-id="' + esc2(a.id) + '"><img src="' + esc2(a.icon || '/favicon.png') + '" alt="" loading="lazy"><span><b>' + esc2(a.name) + '</b><small>' + esc2([a.dev, a.cat].filter(Boolean).join(' · ')) + '</small></span><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></button>';
       }).join('') : '<div class="rp-none">' + (APPS.length ? 'No app matches "' + esc2(q.value.trim()) + '"' : 'Loading apps…') + '</div>';
     }
-    function openSheet() { sheet.hidden = false; document.documentElement.classList.add('rp-lock'); drawList(); requestAnimationFrame(function () { sheet.classList.add('open'); }); setTimeout(function () { try { q.focus(); } catch (e) { } }, 250); }
-    function closeSheet() { sheet.classList.remove('open'); document.documentElement.classList.remove('rp-lock'); setTimeout(function () { sheet.hidden = true; }, 220); }
+    function openSheet() { sheet.hidden = false; drawList(); requestAnimationFrame(function () { sheet.classList.add('open'); }); }
+    function closeSheet() { sheet.classList.remove('open'); setTimeout(function () { sheet.hidden = true; try { window.scrollTo(window.pageXOffset, window.pageYOffset); } catch (e) { } }, 220); }
     $('#rpPick').addEventListener('click', openSheet);
     sheet.addEventListener('click', function (e) {
       if (e.target.closest('[data-close]')) return closeSheet();
@@ -608,8 +608,14 @@
           if (form.device.value.trim()) rec.device = form.device.value.trim().slice(0, 80);
           if (form.appver.value.trim()) rec.appVersion = form.appver.value.trim().slice(0, 30);
           if (urls.length) rec.images = urls.slice(0, 5);
-          if (form.contact.checked && user.email) { rec.contactOk = true; rec.email = user.email; }
-          return dbReq('POST', 'feedback', rec, t).then(function (r) { if (!(r && r.name)) throw new Error('no key'); return r.name; });
+          var wantMail = form.contact.checked && user.email; if (wantMail) rec.contactOk = true;
+          return dbReq('POST', 'feedback', rec, t).then(function (r) {
+            if (!(r && r.name)) throw new Error('no key'); var key = r.name;
+            // the app's developer reads feedback through this index; the email stays in a separate admin-only record
+            var extra = [dbReq('PUT', 'appFeedback/' + picked.id + '/' + key, true, t).catch(function () { })];
+            if (wantMail) extra.push(dbReq('PUT', 'feedbackContact/' + key, { uid: user.uid, email: user.email }, t).catch(function () { }));
+            return Promise.all(extra).then(function () { return key; });
+          });
         });
       }).then(function (key) {
         form.hidden = true; done.hidden = false; $('#rpRef').textContent = '#' + String(key).slice(-6).toUpperCase(); window.scrollTo(0, 0);
