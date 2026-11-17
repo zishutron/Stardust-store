@@ -5,8 +5,16 @@
     <link>https://uptozishu.zishuai.cloud/</link>
     <description>UptoZishu is a free Android app store. Discover, review and download verified APKs of apps and games, updated every few minutes.</description>
     <language>en</language>
-    <lastBuildDate>Mon, 16 Nov 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 17 Nov 2026 00:00:00 GMT</lastBuildDate>
     <atom:link href="https://uptozishu.zishuai.cloud/rss.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Stardust - business tycoon v13.0.7</title>
+      <link>https://uptozishu.zishuai.cloud/apps/com.stardust.business.tycoon/</link>
+      <guid isPermaLink="true">https://uptozishu.zishuai.cloud/apps/com.stardust.business.tycoon/</guid>
+      <pubDate>Tue, 17 Nov 2026 00:00:00 GMT</pubDate>
+      <description>New game where you manage your business and feel like a CEO</description>
+      <category>Games</category>
+    </item>
     <item>
       <title>Stardust-X-messenger v15.0.0</title>
       <link>https://uptozishu.zishuai.cloud/apps/stardustxmessenger/</link>
@@ -166,14 +174,6 @@
       <pubDate>Wed, 29 Jul 2026 00:00:00 GMT</pubDate>
       <description>Master programming languages &amp; coding skills effortlessly with Stardust Learning!</description>
       <category>Education</category>
-    </item>
-    <item>
-      <title>Stardust business tycoon v13.0.7</title>
-      <link>https://uptozishu.zishuai.cloud/apps/com.stardust.business.tycoon/</link>
-      <guid isPermaLink="true">https://uptozishu.zishuai.cloud/apps/com.stardust.business.tycoon/</guid>
-      <pubDate>Fri, 24 Jul 2026 00:00:00 GMT</pubDate>
-      <description>New game where you manage your business and feel like a CEO</description>
-      <category>Games</category>
     </item>
   </channel>
 </rss>
