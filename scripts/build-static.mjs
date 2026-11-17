@@ -559,12 +559,13 @@ const reportPage = (cats) => infoPage({ cats, path: '/report/', title: `Report a
   inner: `<div id="rpGate" class="card rp-gate" hidden><h2>Sign in to report</h2><p>Please sign in so we can send you a confirmation and avoid spam reports.</p><a class="btn btn-primary" id="rpSign" href="/library/">Sign in</a></div>
 <form class="form rp-form" id="rpForm" novalidate hidden>
   <p class="muted">Tell us what is wrong. The more detail you give, the faster we can act. Your report goes to the ${SITE} team and a confirmation is emailed to you.</p>
-  <label>Which app?<select name="app" required><option value="">Loading apps…</option></select></label>
+  <div class="rp-field"><span class="rp-lbl">Which app?</span><input type="hidden" name="app"><button type="button" class="rp-pick" id="rpPick" aria-haspopup="dialog"><span class="rp-pick-ico" id="rpPickIco"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span class="rp-pick-t" id="rpPickT">Choose an app…</span><svg class="rp-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></div>
+  <div id="rpSheet" class="rp-sheet" hidden><div class="rp-back" data-close></div><div class="rp-panel" role="dialog" aria-modal="true" aria-label="Choose an app"><div class="rp-grab"></div><div class="rp-sh"><b>Choose the app</b><button type="button" class="rp-x" data-close aria-label="Close">×</button></div><div class="rp-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rpQ" type="search" placeholder="Search apps by name" autocomplete="off" aria-label="Search apps"></div><div class="rp-list" id="rpList"></div></div></div>
   <fieldset class="rp-reasons"><legend>What is the problem?</legend>
     ${REPORT_REASONS.map(([r, h], i) => `<label class="rp-opt"><input type="radio" name="reason" value="${esc(r)}"${i === 0 ? ' checked' : ''}><span><b>${esc(r)}</b><small>${esc(h)}</small></span></label>`).join('')}
   </fieldset>
   <label>Describe the problem<textarea name="details" rows="5" maxlength="1000" placeholder="What happened? When did you notice it? Which version of the app?"></textarea><small class="muted"><span id="rpCount">0</span> / 1000 (at least 20 characters)</small></label>
-  <label>Link or proof (optional)<input name="evidence" type="url" maxlength="300" placeholder="https://… screenshot or page that shows the problem"></label>
+  <div class="rp-field"><span class="rp-lbl">Screenshots (optional, up to 5)</span><div class="rp-shots" id="rpShots"></div><input type="file" id="rpFile" accept="image/*" multiple hidden></div>
   <label class="rp-check"><input type="checkbox" name="ok"><span>I confirm this report is honest and accurate.</span></label>
   <div class="form-row"><button class="btn btn-primary" type="submit">Submit report</button></div>
   <p class="muted small" id="rpMsg" role="status"></p>
