@@ -210,7 +210,7 @@ function buildDevs(apps, profiles) {
     let slug = cleanUser(p.username) || uid.replace(/[^A-Za-z0-9_-]/g, '');
     if (!slug || used.has(slug)) slug = uid.replace(/[^A-Za-z0-9_-]/g, '') || sha(uid);
     used.add(slug);
-    const d = { uid, slug, path: `/developer/${slug}/`, name, p, apps: list2, verified: p.verified === true };
+    const d = { uid, slug, path: `/developer/${slug}/`, name, p, apps: list2, verified: p.verified === true && !(Number(p.verifiedUntil) && Number(p.verifiedUntil) < Date.now()) };
     devs.push(d);
     for (const a of list2) { a.dev = name; a.devPath = d.path; a.devVerified = d.verified; }
   }
