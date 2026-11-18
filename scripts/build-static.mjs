@@ -867,6 +867,7 @@ async function main() {
   const { data: reviews, known } = await loadReviews(rawApps.filter((a) => LIVE.has(str(a.status).toLowerCase())));
   const apps = normalize(rawApps, reviews, known);
   SF = await loadStorefront();
+  console.log(`[build] storefront picks: ${SF.featured.length} featured, ${SF.editors.length} editors, ${SF.sponsored.length} sponsored`);
   const DEVS = buildDevs(apps, await loadDevProfiles());
   console.log(`[build] ${rawApps.length} app record(s), ${apps.length} live`);
 
@@ -875,7 +876,8 @@ async function main() {
   // is added / removed / edited (or the generator itself changed). Download + review counters only
   // change the page of that one app, so a download never rewrites the home page.
   const STATE = join(ROOT, 'data/build-state.json');
-  const GEN = sha((await readFile(fileURLToPath(import.meta.url), 'utf8')) + ASSET_V + BASE + DB);
+  // the admin's storefront picks are part of the generator input, so approving or removing a Sponsored / Featured / Editor's choice app rebuilds the listing pages
+  const GEN = sha((await readFile(fileURLToPath(import.meta.url), 'utf8')) + ASSET_V + BASE + DB + JSON.stringify(SF));
   const prev = existsSync(STATE) ? JSON.parse(await readFile(STATE, 'utf8')) : null;
   const meta = (a) => sha(JSON.stringify({ ...a, dl: 0, rc: 0, rating: 0, reviews: 0 }));
   const cur = Object.fromEntries(apps.map((a) => [a.id, { h: meta(a), dl: a.dl, rc: a.rc, rating: a.rating }]));
