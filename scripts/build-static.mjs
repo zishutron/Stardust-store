@@ -622,29 +622,40 @@ const supportPage = (cats) => infoPage({ cats, path: '/support/', title: `Custom
 <p>Publish and manage your apps in the <a href="${esc(CONSOLE_URL)}">developer console</a>. For help with it, use the same email address.</p>
 <p class="muted">See also: <a href="/privacy.html">Privacy policy</a> · <a href="/terms.html">Terms of service</a></p>` });
 
-const UPDATED = '13 November 2026';
+const UPDATED = '18 November 2026';
 const privacyPage = (cats) => infoPage({ cats, path: '/privacy.html', title: `Privacy policy — ${SITE}`, h1: 'Privacy policy', sub: `updated ${UPDATED}`,
-  desc: `What ${SITE} stores about you, what stays on your phone, and how to edit or delete your data.`,
-  inner: `<p>${SITE} is a web app store. You can browse and download apps without an account. An account is only needed to post reviews.</p>
+  desc: `What ${SITE} stores about you, what stays on your phone, who can see it, and how to edit or delete your data.`,
+  inner: `<p>${SITE} is a web app store run by ZISHU TRON. This policy explains what we collect, why, who can see it and the choices you have. By using the store you agree to it. You can browse and download apps without an account. An account is needed only to post reviews, send feedback, send reports and use support.</p>
 <h2>What we store on our servers</h2>
 <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Data</th><th>Why</th><th>Public?</th></tr></thead><tbody>
 <tr><td>Name, username, bio, sign-up date</td><td>Your profile and reviews</td><td>Yes, on your public profile</td></tr>
-<tr><td>Email and password (or Google sign-in)</td><td>Signing you in</td><td>No, never shown</td></tr>
+<tr><td>Email and password (or Google sign-in)</td><td>Signing you in and sending you replies</td><td>No, never shown</td></tr>
 <tr><td>Reviews (rating, text, your name and username)</td><td>Show reviews on the app page</td><td>Yes</td></tr>
-<tr><td>Reports you send about an app</td><td>Review and remove bad apps</td><td>No</td></tr>
-<tr><td>App counters: views, downloads (also per day), rating</td><td>Show popularity to everyone and to the app's developer</td><td>Yes, as totals, not linked to you</td></tr></tbody></table></div>
+<tr><td>Feedback you send about an app (type, topic, stars, message, optional screenshots, basic device details such as phone model and Android version, and your account email)</td><td>Pass your feedback to the app's developer and to our team</td><td>No. Seen by our team and by the app's developer. Your email is seen by our team only</td></tr>
+<tr><td>Reports you send about an app (reason, details, optional screenshots)</td><td>Review and remove bad apps</td><td>No</td></tr>
+<tr><td>Support tickets and our replies</td><td>Help you and keep a record</td><td>No</td></tr>
+<tr><td>App counters: views, downloads (also per day), rating</td><td>Show popularity to everyone and to the app's developer</td><td>Yes, as totals, not linked to you</td></tr>
+<tr><td>Account status, for example if an account is suspended for breaking the rules, with the reason and date</td><td>Keep the store safe</td><td>No</td></tr></tbody></table></div>
 <p>If you only browse, no personal data about you is saved on our servers.</p>
 <h2>What stays on your phone</h2>
 <ul><li>Saved apps and download history: one list on this phone, the same with or without login. It is never uploaded.</li><li>Your theme (light or dark).</li><li>Small temporary items so your latest review or download shows before the store page refreshes.</li></ul>
 <p>Clearing your browser data removes these and we cannot restore them.</p>
+<h2>What other people can see</h2>
+<ul><li><b>Everyone:</b> your public profile and your reviews.</li><li><b>App developers:</b> feedback sent about their apps, and the reviews and ratings on their apps. They do not get your email address from us.</li><li><b>Our team:</b> feedback, reports, tickets and account status, so we can act on them.</li></ul>
 <h2>How we use it</h2>
-<ul><li>To run your account, profile and reviews.</li><li>To keep one review per person per app and usernames unique.</li><li>To count views and downloads.</li><li>To handle reports and keep the store safe.</li></ul>
-<p>We do not sell or share your personal data with anyone. It stays in our Firebase database, which we use only to run the store.</p>
+<ul><li>To run your account, profile and reviews.</li><li>To keep one review per person per app and usernames unique.</li><li>To count views and downloads.</li><li>To handle feedback, reports and tickets, and to keep the store safe from spam, fake reviews and bad apps.</li><li>To send you service emails, such as a confirmation or reply to a report or ticket you sent.</li></ul>
+<p>We do not sell your personal data and we do not share it with advertisers. We may share information only when the law requires it, when an authority asks for it, or to protect our users and the store.</p>
+<h2>Paid placements</h2>
+<p>Some apps appear in lists marked Sponsored or Featured, and some developers have a Verified badge. Developers pay us for these. Paying never gives a developer access to your personal data.</p>
 <h2>Services we use</h2>
-<ul><li><b>Firebase (Google)</b> for sign-in (email or Google) and our database.</li><li><b>GitHub Pages</b> to host the store's pages.</li><li><b>Developer download links:</b> when you tap Download you go to a link chosen by the app's developer, and their own privacy policy applies there.</li></ul>
+<ul><li><b>Firebase (Google)</b> for sign-in (email or Google) and our database.</li><li><b>GitHub Pages</b> to host the store's pages.</li><li><b>imgbb</b> to host screenshots you attach to feedback or reports. Anyone with the exact link can open such an image, so do not include private details in a screenshot.</li><li><b>Google Apps Script and Gmail</b> to send service emails.</li><li><b>Developer download links:</b> when you tap Download you go to a link chosen by the app's developer, and their own privacy policy applies there.</li></ul>
 <p>These services may process basic technical data such as your IP address under their own policies.</p>
+<h2>How long we keep it</h2>
+<p>We keep your data while your account is active. Reports, tickets, feedback and account-status records may be kept for a reasonable time afterwards to stop repeat abuse and to settle disputes. Copies in backups or provider logs can remain for a short time after deletion.</p>
 <h2>Your choices</h2>
-<ul><li><b>Edit</b> your name and bio in Library, Settings, Edit profile. Your username is locked once chosen.</li><li><b>Delete your account</b> in Library, Settings, Delete account. This removes your profile, username and all your reviews, and updates app ratings.</li><li><b>Report</b> an app in Library, Settings, Report an app.</li><li><b>Ask us</b> about your data by email.</li></ul>
+<ul><li><b>Edit</b> your name and bio in Library, Settings, Edit profile. Your username is locked once chosen.</li><li><b>Delete your account</b> in Library, Settings, Delete account. This removes your profile, username and all your reviews, and updates app ratings. Records described under How long we keep it may remain.</li><li><b>Ask us</b> for a copy of your data, a correction, or deletion by email. Use any rights you have under the laws that apply to you.</li></ul>
+<h2>Security</h2>
+<p>We use HTTPS and database security rules, and only our team can open reports, tickets and feedback contact details. No online service is perfectly secure, so use a strong, unique password and sign out on shared devices.</p>
 <h2>Children</h2>
 <p>${SITE} is not meant for children under 13 and we do not knowingly collect their data. If you think a child made an account, email us and we will delete it.</p>
 <h2>Changes</h2>
@@ -653,23 +664,29 @@ const privacyPage = (cats) => infoPage({ cats, path: '/privacy.html', title: `Pr
 <p><a href="mailto:${esc(SUPPORT_EMAIL)}">${esc(SUPPORT_EMAIL)}</a> · <a href="/terms.html">Terms of service</a></p>` });
 
 const termsPage = (cats) => infoPage({ cats, path: '/terms.html', title: `Terms of service — ${SITE}`, h1: 'Terms of service', sub: `updated ${UPDATED}`,
-  desc: `Simple rules for using ${SITE}: accounts, reviews, downloads and developers.`,
-  inner: `<p>${SITE} is a web store where developers list apps and people discover and download them. By using it you agree to these terms. If you do not agree, please do not use the store.</p>
+  desc: `Simple rules for using ${SITE}: accounts, reviews, feedback, downloads, developers and paid placements.`,
+  inner: `<p>${SITE} is a web store where developers list apps and people discover and download them. By using it you agree to these terms and to our <a href="/privacy.html">privacy policy</a>. If you do not agree, please do not use the store.</p>
 <h2>Using the store</h2>
-<p>Browsing and downloading need no account and are free. Features may change or be removed at any time.</p>
+<p>Browsing and downloading need no account and are free. Features may change, pause or be removed at any time.</p>
 <h2>Accounts</h2>
-<ul><li>You can sign up with email or Google. An account is needed only to review apps.</li><li>Usernames are unique and cannot be changed after you pick them.</li><li>Your name, username, bio and reviews are public. Your email is not.</li><li>Keep your password safe. You are responsible for what happens in your account.</li><li>You can delete your account any time in Library, Settings.</li></ul>
-<h2>Reviews and conduct</h2>
-<p>One review per person per app. You can edit it later. Please do not:</p>
-<ul><li>Post spam, fake, abusive, hateful or illegal content.</li><li>Review your own app or ask others to inflate ratings.</li><li>Share other people's private information.</li><li>Try to break, overload or misuse the store.</li></ul>
-<p>We may remove reviews, apps or accounts that break these rules, without notice.</p>
+<ul><li>You can sign up with email or Google. An account is needed to review, send feedback or reports, and use support.</li><li>Usernames are unique and cannot be changed after you pick them.</li><li>Your name, username, bio and reviews are public. Your email is not.</li><li>Keep your password safe. You are responsible for what happens in your account.</li><li>We may suspend an account that breaks these rules. A suspended account cannot post reviews, feedback, reports or tickets.</li></ul>
+<h2>Reviews, feedback and conduct</h2>
+<p>One review per person per app. You can edit it later. Feedback and reports must be honest and about the app. Please do not:</p>
+<ul><li>Post spam, fake, abusive, hateful or illegal content.</li><li>Review your own app, buy or sell reviews, or ask others to inflate or lower ratings.</li><li>Send false reports or feedback to harm a developer.</li><li>Share other people's private information, or upload screenshots that show private details.</li><li>Try to break, overload or misuse the store.</li></ul>
+<p>We may remove reviews, feedback, apps or accounts that break these rules, without notice.</p>
 <h2>Downloads and developers</h2>
-<p>Apps are uploaded by independent developers. The developer, not ${SITE}, owns the app and is responsible for it and its download file.</p>
-<ul><li>We do not guarantee that an app is safe, working or accurately described.</li><li>Download only what you trust, and check the app's permissions and policy.</li><li>Developers must only upload apps they have the right to share, and no malware or misleading apps.</li><li>See a bad app? Use Report an app in Library, Settings.</li></ul>
+<p>Apps are uploaded by independent developers. The developer, not ${SITE}, owns the app and is responsible for it and its download file. New apps and changes are checked by our team before they appear, but a check is not a guarantee.</p>
+<ul><li>We do not guarantee that an app is safe, working or accurately described.</li><li>Download only what you trust, and check the app's permissions and policy.</li><li>Developers must only upload apps they have the right to share, with no malware or misleading claims.</li><li>If you believe an app breaks your rights or the law, report it from the app page or email us with details and proof. We review valid complaints and may remove the app.</li></ul>
+<h2>Sponsored, Featured and Verified</h2>
+<ul><li>Apps in the Sponsored or Featured lists, and developers with a Verified badge, may have paid for that place. The lists show paid and hand-picked apps; they are not a ranking of quality.</li><li>A Verified badge means our team reviewed the developer's profile. It is not a guarantee or endorsement of any app.</li><li>Paid plans are bought by developers in the developer console and are covered by its own terms. You, as a store user, never pay us anything.</li></ul>
 <h2>Disclaimer and liability</h2>
-<p>${SITE} is provided “as is”, without promise of being error-free or always available. To the extent the law allows, we are not responsible for loss or damage from using the store or from apps you download through it.</p>
+<p>${SITE} is provided “as is”, without promise of being error-free or always available. To the extent the law allows, we are not responsible for loss or damage from using the store or from apps you download through it, and our total liability is limited to the extent the law allows.</p>
+<h2>Intellectual property</h2>
+<p>The ${SITE} name, logo, design, code and content made by us belong to ZISHU TRON and its owner, and may not be copied or reused without written permission. Apps, names and logos of developers belong to those developers.</p>
 <h2>Changes and ending access</h2>
 <p>We may update these terms and the date at the top will change. Continuing to use the store means you accept them. We may suspend access for anyone who breaks the rules. You can stop using the store, or delete your account, at any time.</p>
+<h2>Governing law</h2>
+<p>These terms are governed by the laws of India.</p>
 <h2>Contact</h2>
 <p><a href="mailto:${esc(SUPPORT_EMAIL)}">${esc(SUPPORT_EMAIL)}</a> · <a href="/privacy.html">Privacy policy</a></p>` });
 
