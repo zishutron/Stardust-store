@@ -682,6 +682,22 @@
     else if (navigator.clipboard) navigator.clipboard.writeText(data.url).then(function () { toast('Link copied'); });
   });
 
+  // App information rows (verification, permissions, security) open a bottom sheet
+  $$('.irow[data-sheet]').forEach(function (row) {
+    row.addEventListener('click', function () {
+      var tpl = document.querySelector('template[data-sheet-for="' + row.dataset.sheet + '"]'); if (!tpl) return;
+      var ov = document.createElement('div'); ov.className = 'isheet-ov';
+      ov.innerHTML = '<div class="isheet" role="dialog" aria-modal="true"><div class="isheet-grab"></div><div class="isheet-body"></div></div>';
+      ov.querySelector('.isheet-body').appendChild(tpl.content.cloneNode(true));
+      var close = function () { ov.classList.remove('on'); document.removeEventListener('keydown', onKey); setTimeout(function () { ov.remove(); }, 220); };
+      var onKey = function (e) { if (e.key === 'Escape') close(); };
+      ov.addEventListener('click', function (e) { if (e.target === ov || e.target.classList.contains('isheet-grab')) close(); });
+      document.addEventListener('keydown', onKey);
+      document.body.appendChild(ov);
+      requestAnimationFrame(function () { ov.classList.add('on'); });
+    });
+  });
+
   // pre-register (Coming soon apps): stored at preRegs/<app>/<uid>; the UptoZishu Android app notifies the user at release
   var preBtn = $('#preBtn');
   if (preBtn) {

@@ -484,7 +484,8 @@ html[data-theme=dark] .soon{color:#fbbf24}
 /* app information: extra rows (verification, permissions, security, report, feedback) */
 .irows{margin-top:2px}
 .irow{display:block;border-bottom:1px solid var(--line);color:inherit;text-decoration:none}
-.irow>summary,a.irow{display:flex;align-items:center;gap:14px;padding:12px 0;cursor:pointer;list-style:none}
+.irow{width:100%;background:none;border-left:0;border-right:0;border-top:0;font:inherit;text-align:left}
+button.irow,a.irow{display:flex;align-items:center;gap:14px;padding:12px 0;cursor:pointer;list-style:none}
 .irow>summary::-webkit-details-marker{display:none}
 .irow span{flex:0 0 38%;color:var(--muted)}
 .irow b{flex:1;text-align:left;font-weight:700}
@@ -492,8 +493,15 @@ html[data-theme=dark] .soon{color:#fbbf24}
 .irow b.ok{color:var(--ok)}
 .irow b.no{color:#d97706}
 .irow .chev{flex:none;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
-details.irow[open] .chev{transform:rotate(90deg)}
 .idetail{padding:0 0 14px}
 .idetail p{margin:0 0 8px;color:var(--muted);font-size:14px}
 .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .pill{padding:7px 13px;border-radius:999px;background:var(--soft);border:1px solid var(--line);font-size:13px;font-weight:600}
+
+.isheet-ov{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0);display:flex;align-items:flex-end;justify-content:center;transition:background .2s}
+.isheet-ov.on{background:rgba(0,0,0,.45)}
+.isheet{width:100%;max-width:640px;max-height:80vh;overflow:auto;background:var(--card);color:var(--text);border-radius:24px 24px 0 0;padding:10px 22px 28px;transform:translateY(100%);transition:transform .22s ease;box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+.isheet-ov.on .isheet{transform:none}
+.isheet-grab{width:44px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 16px;cursor:pointer}
+.isheet-body h3{margin:0 0 10px;font-size:20px}
+.isheet-body p{color:var(--muted);margin:0 0 10px}
