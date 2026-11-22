@@ -776,7 +776,7 @@ function soonAppPage(a, apps, cats, crumbs, paras) {
         <li><b>${esc(a.minAndroid)}+</b><small>Android</small></li>
       </ul>
       <div class="cta"><button class="btn btn-primary btn-lg" id="preBtn" type="button" data-id="${esc(a.id)}">${svg.bell}<span>Pre-register</span></button><button class="btn btn-ghost" id="shareBtn" type="button" aria-label="Share">${svg.share}<span>Share</span></button></div>
-      <p class="muted small" id="preNote">Pre-register and we will email you as soon as ${esc(a.name)} is released.</p>
+      <p class="muted small" id="preNote">Pre-register and the UptoZishu Android app will notify you as soon as ${esc(a.name)} is released.</p>
     </div>
   </header>
   <p class="soon-banner">${svg.bell}<span><b>Coming soon.</b> ${esc(label)}. This app is not available to download yet.</span></p>
@@ -789,7 +789,7 @@ function soonAppPage(a, apps, cats, crumbs, paras) {
 </article>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview"><button class="lb-close" type="button" aria-label="Close preview">×</button><img alt=""></div>`;
   const ld = [crumbLd(crumbs)];
-  return layout({ title: `${a.name} — Coming soon | ${SITE}`, desc: a.short ? `${a.short} ${label} on ${SITE}. Pre-register to be notified at release.` : `${a.name} is coming soon to ${SITE}. Pre-register to be notified at release.`,
+  return layout({ title: `${a.name} — Coming soon | ${SITE}`, desc: a.short ? `${a.short} ${label} on ${SITE}. Pre-register to be notified at release in the UptoZishu app.` : `${a.name} is coming soon to ${SITE}. Pre-register to be notified at release in the UptoZishu app.`,
     path: a.path, body, ld, page: 'app', cats, image: a.banner || (a.icon.startsWith('http') ? a.icon : undefined) });
 }
 
@@ -991,7 +991,7 @@ async function main() {
     }
     if (SOON.length) await write('coming-soon/index.html', listPage({
       title: `Coming Soon — Upcoming Android Apps & Games | ${SITE}`, h1: 'Coming soon', path: '/coming-soon/', apps: SOON, cats, page: 'apps',
-      intro: 'Apps and games that are almost here. Pre-register to get an email the moment one is released.', crumbs: crumbHtml([['/', 'Home'], [null, 'Coming soon']])
+      intro: 'Apps and games that are almost here. Pre-register and the UptoZishu Android app notifies you the moment one is released.', crumbs: crumbHtml([['/', 'Home'], [null, 'Coming soon']])
     }));
     await write('top/index.html', topPage(listApps, cats));
     await write('search/index.html', searchPage(listApps, cats));
