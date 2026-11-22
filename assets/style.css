@@ -505,3 +505,8 @@ button.irow,a.irow{display:flex;align-items:center;gap:14px;padding:12px 0;curso
 .isheet-grab{width:44px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 16px;cursor:pointer}
 .isheet-body h3{margin:0 0 10px;font-size:20px}
 .isheet-body p{color:var(--muted);margin:0 0 10px}
+
+.vfbig{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;margin:6px 0 14px;color:#fff}
+.vfbig.ok{background:#16833f}.vfbig.no{background:#d97706}
+.vfbig svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.isheet-body h4{margin:0 0 4px;font-size:18px}
