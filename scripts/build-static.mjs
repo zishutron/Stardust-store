@@ -756,14 +756,14 @@ function devPage(d, cats) {
 }
 
 const chev = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
-const infoRow = (k, v, body, cls = '') => `<details class="irow"><summary><span>${k}</span><b class="${cls}">${v}</b>${chev}</summary><div class="idetail">${body}</div></details>`;
+const infoRow = (k, v, body, cls = '') => `<button class="irow" type="button" data-sheet="${k}"><span>${k}</span><b class="${cls}">${v}</b>${chev}</button><template data-sheet-for="${k}"><h3>${k === 'Verification' ? 'Developer verification' : k === 'Permissions' ? 'App permissions' : k}</h3>${body}</template>`;
 const infoLink = (k, v, href) => `<a class="irow" href="${href}"><span>${k}</span><b class="lnk">${esc(v)}</b>${chev}</a>`;
 const verifyRow = (a) => infoRow('Verification', a.devVerified ? 'Verified ✓' : 'Not verified', `<p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet. Install only if you trust this developer.`}</p>`, a.devVerified ? 'ok' : 'no');
 const permRow = (a) => infoRow('Permissions', a.permissions.length ? `${a.permissions.length} listed` : 'None listed', a.permissions.length
   ? `<p class="muted">Declared by the developer. This app may ask for access to:</p><div class="pills">${a.permissions.map((x) => `<span class="pill">${esc(x)}</span>`).join('')}</div>`
   : '<p class="muted">The developer has not listed any permissions for this app.</p>');
-const secRow = (a) => infoRow('Security', 'Direct from developer', `<p>The APK is hosted by the developer and opens from its official download link. Always install apps from sources you trust.</p>${a.sha256 ? `<p class="hash">SHA-256: <code>${esc(a.sha256)}</code></p>` : ''}`);
-const moreRows = (a, full) => `<div class="irows">${verifyRow(a)}${full ? permRow(a) + secRow(a) : ''}${infoLink('Report', 'Report this app', '/report/?app=' + encodeURIComponent(a.id))}${infoLink('Feedback', 'Send feedback', '/feedback/?app=' + encodeURIComponent(a.id))}</div>`;
+const secRow = () => infoRow('Security', 'Direct from developer', '<p>The APK is hosted by the developer and opens from its official download link. Always install apps from sources you trust.</p>');
+const moreRows = (a, full) => `<div class="irows">${verifyRow(a)}${full ? permRow(a) + secRow() : ''}${infoLink('Report', 'Report this app', '/report/?app=' + encodeURIComponent(a.id))}${infoLink('Feedback', 'Send feedback', '/feedback/?app=' + encodeURIComponent(a.id))}</div>`;
 const listAppsForSoon = (apps) => apps;
 function soonAppPage(a, apps, cats, crumbs, paras) {
   const more = apps.filter((x) => x.id !== a.id && x.catSlug === a.catSlug).sort(byDl).slice(0, 10);
