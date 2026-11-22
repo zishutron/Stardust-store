@@ -755,6 +755,15 @@ function devPage(d, cats) {
   return layout({ title, desc, path: d.path, body, ld, image: cover || logo || undefined, page: 'dev', cats });
 }
 
+const chev = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+const infoRow = (k, v, body, cls = '') => `<details class="irow"><summary><span>${k}</span><b class="${cls}">${v}</b>${chev}</summary><div class="idetail">${body}</div></details>`;
+const infoLink = (k, v, href) => `<a class="irow" href="${href}"><span>${k}</span><b class="lnk">${esc(v)}</b>${chev}</a>`;
+const verifyRow = (a) => infoRow('Verification', a.devVerified ? 'Verified ✓' : 'Not verified', `<p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet. Install only if you trust this developer.`}</p>`, a.devVerified ? 'ok' : 'no');
+const permRow = (a) => infoRow('Permissions', a.permissions.length ? `${a.permissions.length} listed` : 'None listed', a.permissions.length
+  ? `<p class="muted">Declared by the developer. This app may ask for access to:</p><div class="pills">${a.permissions.map((x) => `<span class="pill">${esc(x)}</span>`).join('')}</div>`
+  : '<p class="muted">The developer has not listed any permissions for this app.</p>');
+const secRow = (a) => infoRow('Security', 'Direct from developer', `<p>The APK is hosted by the developer and opens from its official download link. Always install apps from sources you trust.</p>${a.sha256 ? `<p class="hash">SHA-256: <code>${esc(a.sha256)}</code></p>` : ''}`);
+const moreRows = (a, full) => `<div class="irows">${verifyRow(a)}${full ? permRow(a) + secRow(a) : ''}${infoLink('Report', 'Report this app', '/report/?app=' + encodeURIComponent(a.id))}${infoLink('Feedback', 'Send feedback', '/feedback/?app=' + encodeURIComponent(a.id))}</div>`;
 const listAppsForSoon = (apps) => apps;
 function soonAppPage(a, apps, cats, crumbs, paras) {
   const more = apps.filter((x) => x.id !== a.id && x.catSlug === a.catSlug).sort(byDl).slice(0, 10);
@@ -783,8 +792,7 @@ function soonAppPage(a, apps, cats, crumbs, paras) {
   ${a.short ? `<p class="tagline">${esc(a.short)}</p>` : ''}
   ${a.shots.length ? `<section class="sec"><h2>Screenshots</h2><div class="shots">${a.shots.map((u, i) => `<img src="${esc(u)}" loading="lazy" decoding="async" alt="${esc(a.name)} screenshot ${i + 1}" data-zoom>`).join('')}</div></section>` : ''}
   <section class="sec prose"><h2>About ${esc(a.name)}</h2><div class="clamp" id="desc">${paras}</div><button class="linkbtn more" id="descMore" type="button" aria-expanded="false" aria-controls="desc" hidden>Show more</button>${a.tags.length ? `<div class="chips">${a.tags.map((t) => `<a class="chip" href="/search/?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>` : ''}</section>
-  <section class="sec"><h2>App information</h2><dl class="info">${info}</dl></section>
-  <section class="sec" id="dev-verification"><h2>Developer verification</h2><div class="card vf ${a.devVerified ? 'ok' : 'no'}"><div class="vf-ic">${svg.shield}</div><div><b>${a.devVerified ? 'Verified developer' : 'Unverified developer'}</b><p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet.`}</p></div></div></section>
+  <section class="sec"><h2>App information</h2><dl class="info">${info}</dl>${moreRows(a, false)}</section>
   ${shelf('You may also like', more)}
 </article>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview"><button class="lb-close" type="button" aria-label="Close preview">×</button><img alt=""></div>`;
@@ -843,14 +851,8 @@ function appPage(a, apps, cats) {
   ${a.shots.length ? `<section class="sec"><h2>Screenshots</h2><div class="shots">${a.shots.map((u, i) => `<img src="${esc(u)}" loading="lazy" decoding="async" alt="${esc(a.name)} screenshot ${i + 1}" data-zoom>`).join('')}</div></section>` : ''}
   <section class="sec prose"><h2>About ${esc(a.name)}</h2><div class="clamp" id="desc">${paras}</div><button class="linkbtn more" id="descMore" type="button" aria-expanded="false" aria-controls="desc" hidden>Show more</button>${a.tags.length ? `<div class="chips">${a.tags.map((t) => `<a class="chip" href="/search/?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>` : ''}</section>
   ${a.whatsNew.length ? `<section class="sec"><h2>What’s new in ${esc(a.version)}</h2><ul class="wn">${a.whatsNew.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>` : ''}
-  <section class="sec"><h2>App information</h2><dl class="info">${info}</dl></section>
-  <section class="sec" id="dev-verification"><h2>Developer verification</h2><div class="card vf ${a.devVerified ? 'ok' : 'no'}"><div class="vf-ic">${svg.shield}</div><div><b>${a.devVerified ? 'Verified developer' : 'Unverified developer'}</b><p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet. Install only if you trust this developer.`}</p></div></div></section>
-  <section class="sec" id="feedback"><h2>Feedback</h2><div class="card vf fb"><div class="vf-ic"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg></div><div><b>Tell us what you think</b><p>Found a bug, have an idea, or just like the app? Send feedback about ${esc(a.name)}.</p><a class="btn btn-ghost" href="/feedback/?app=${encodeURIComponent(a.id)}">Send feedback</a></div></div></section>
+  <section class="sec"><h2>App information</h2><dl class="info">${info}</dl>${moreRows(a, true)}</section>
   ${a.history.length > 1 ? `<section class="sec"><h2>Version history</h2><div class="chips">${[...a.history].reverse().map((v) => `<span class="chip">${esc(v)}</span>`).join('')}</div></section>` : ''}
-  <section class="sec" id="permissions"><h2>App permissions</h2>${a.permissions.length
-    ? `<p class="muted">Declared by the developer. This app may ask for access to:</p><ul class="perms">${a.permissions.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
-    : '<p class="muted">The developer has not listed any permissions for this app.</p>'}</section>
-  <section class="sec"><h2>Security</h2><div class="card secure">${svg.shield}<div><b>Direct from the developer</b><p>The APK is hosted by the developer and opens from its official download link. Always install apps from sources you trust.</p>${a.sha256 ? `<p class="hash">SHA-256: <code>${esc(a.sha256)}</code></p>` : ''}</div></div></section>
   <section class="sec" id="reviews"><h2>Ratings &amp; reviews</h2>
     <div class="rev-sum"><div class="big"><b>${a.rc > 0 ? a.rating.toFixed(1) : '–'}</b><span class="stars">${stars(Math.round(a.rc > 0 ? a.rating : 0))}</span><small>${a.rc} ${a.rc === 1 ? 'review' : 'reviews'}</small></div>
       <div class="bars">${[5, 4, 3, 2, 1].map((n) => `<div><span>${n}</span><i><u style="width:${total ? Math.round((dist[n - 1] / total) * 100) : 0}%"></u></i><span>${dist[n - 1]}</span></div>`).join('')}</div></div>
