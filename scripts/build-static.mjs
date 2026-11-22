@@ -758,7 +758,7 @@ function devPage(d, cats) {
 const chev = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 const infoRow = (k, v, body, cls = '') => `<button class="irow" type="button" data-sheet="${k}"><span>${k}</span><b class="${cls}">${v}</b>${chev}</button><template data-sheet-for="${k}"><h3>${k === 'Verification' ? 'Developer verification' : k === 'Permissions' ? 'App permissions' : k}</h3>${body}</template>`;
 const infoLink = (k, v, href) => `<a class="irow" href="${href}"><span>${k}</span><b class="lnk">${esc(v)}</b>${chev}</a>`;
-const verifyRow = (a) => infoRow('Verification', a.devVerified ? 'Verified ✓' : 'Not verified', `<p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet. Install only if you trust this developer.`}</p>`, a.devVerified ? 'ok' : 'no');
+const verifyRow = (a) => infoRow('Verification', a.devVerified ? 'Verified ✓' : 'Not verified', `<div class="vfbig ${a.devVerified ? 'ok' : 'no'}">${a.devVerified ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v6M12 17h.01"/></svg>'}</div><h4>${a.devVerified ? 'Verified developer' : 'Not verified yet'}</h4><p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet. Install only if you trust this developer.`}</p>`, a.devVerified ? 'ok' : 'no');
 const permRow = (a) => infoRow('Permissions', a.permissions.length ? `${a.permissions.length} listed` : 'None listed', a.permissions.length
   ? `<p class="muted">Declared by the developer. This app may ask for access to:</p><div class="pills">${a.permissions.map((x) => `<span class="pill">${esc(x)}</span>`).join('')}</div>`
   : '<p class="muted">The developer has not listed any permissions for this app.</p>');
@@ -892,7 +892,7 @@ function sitemap(apps, cats, devs = []) {
   const last = apps.reduce((m, a) => Math.max(m, a.updatedTs), 0);
   const urls = [
     { loc: '/', lm: last, p: '1.0', f: 'daily' }, { loc: '/apps/', lm: last, p: '0.9', f: 'daily' }, { loc: '/top/', lm: last, p: '0.8', f: 'daily' },
-    { loc: '/about/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/support/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/founder/', lm: 0, p: '0.4', f: 'monthly' },
+    { loc: '/about/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/support/', lm: 0, p: '0.4', f: 'monthly' }, { loc: '/privacy.html', lm: 0, p: '0.3', f: 'yearly' }, { loc: '/terms.html', lm: 0, p: '0.3', f: 'yearly' }, { loc: '/founder/', lm: 0, p: '0.4', f: 'monthly' },
     ...NAV_COLLECTIONS.map((c) => ({ loc: c.path, lm: last, p: '0.7', f: 'daily' })),
     ...cats.map((c) => ({ loc: `/category/${c.slug}/`, lm: c.last, p: '0.7', f: 'daily' })),
     ...devs.map((d) => ({ loc: d.path, lm: d.apps.reduce((m, a) => Math.max(m, a.updatedTs), 0), p: '0.6', f: 'weekly' })),
