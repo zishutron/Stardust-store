@@ -55,6 +55,8 @@ const FALLBACK_ICON = '/favicon.png';
 const MAX_REVIEWS_BAKED = 15;
 
 const LIVE = new Set(['live', 'approved']);
+let SOON = []; // approved pre-release apps (status "upcoming"): shown as Coming soon, pre-register instead of download
+const soonLabel = (a) => { const t = a.releaseDate ? Date.parse(a.releaseDate + 'T00:00:00Z') : 0; return t && t > Date.now() - 86400000 ? `Expected ${dateFmt(t)}` : 'Coming soon'; };
 const CAT_ICON = {
   games: '🎮', social: '💬', ai: '🤖', entertainment: '🎬', tools: '🛠️', shopping: '🛍️',
   music: '🎵', education: '🎓', health: '❤️', photography: '📷', finance: '💰', travel: '✈️',
@@ -147,7 +149,8 @@ async function loadDevProfiles() {
 function normalize(apps, reviewsAll, knownReviews) {
   const out = [];
   for (const a of apps) {
-    if (!LIVE.has(str(a.status).toLowerCase())) continue;
+    const st = str(a.status).toLowerCase();
+    if (!LIVE.has(st) && st !== 'upcoming') continue;
     const name = str(a.name);
     if (!name) continue;
     const rawCat = str(a.category) || 'General';
@@ -167,7 +170,7 @@ function normalize(apps, reviewsAll, knownReviews) {
       .sort((x, y) => y.ts - x.ts);
 
     out.push({
-      id: a.id, name, catRaw: rawCat, catSlug,
+      id: a.id, name, catRaw: rawCat, catSlug, soon: st === 'upcoming', releaseDate: /^\d{4}-\d{2}-\d{2}$/.test(str(a.releaseDate)) ? str(a.releaseDate) : '', pre: Math.max(0, num(a.preRegCount)),
       pkg: str(a.package), version: str(a.version) || '1.0', size: str(a.size) || '',
       short: str(a.shortDescription), desc: str(a.description), whatsNew: str(a.whatsNew).split('\n').map(str).filter(Boolean),
       downloadUrl: httpUrl(a.downloadUrl), icon: httpUrl(a.icon) || FALLBACK_ICON, banner: httpUrl(a.banner),
@@ -228,6 +231,7 @@ const svg = {
   download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>',
   share: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>',
   shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
   mic: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>'
 };
 
@@ -237,11 +241,11 @@ const sortAttrs = (a) => `data-n="${esc(a.name.toLowerCase())}" data-d="${a.dl}"
 
 function row(a, extra = '') {
   return `<a class="row" href="${a.path}" ${sortAttrs(a)}>${extra}<img class="ic" src="${esc(a.icon)}" width="64" height="64" loading="lazy" decoding="async" alt="">`
-    + `<span class="meta"><span class="nm">${esc(a.name)}</span><span class="ds">${esc(trunc(a.short || a.catRaw, 70))}</span><span class="st">${statLine(a)}</span></span></a>`;
+    + `<span class="meta"><span class="nm">${esc(a.name)}</span><span class="ds">${esc(trunc(a.short || a.catRaw, 70))}</span><span class="st">${a.soon ? `<span class="soon">${esc(soonLabel(a))}</span>` : statLine(a)}</span></span></a>`;
 }
 function tile(a) {
   return `<a class="tile" href="${a.path}" ${sortAttrs(a)}><img class="ic" src="${esc(a.icon)}" width="72" height="72" loading="lazy" decoding="async" alt="">`
-    + `<span class="nm">${esc(a.name)}</span><span class="st">${a.rc > 0 ? `<span class="star">★</span> ${a.rating.toFixed(1)}` : esc(a.catRaw)}</span></a>`;
+    + `<span class="nm">${esc(a.name)}</span><span class="st">${a.soon ? `<span class="soon">${esc(soonLabel(a))}</span>` : a.rc > 0 ? `<span class="star">★</span> ${a.rating.toFixed(1)}` : esc(a.catRaw)}</span></a>`;
 }
 const shelf = (title, apps, more) => apps.length ? `<section class="sec"><div class="sec-h"><h2>${esc(title)}</h2>${more ? `<a href="${more}">See all</a>` : ''}</div><div class="shelf">${apps.map(tile).join('')}</div></section>` : '';
 const tilesSection = (title, apps, more) => apps.length ? `<section class="sec"><div class="sec-h"><h2>${esc(title)}</h2>${more ? `<a href="${more}">See all</a>` : ''}</div><div class="tiles">${apps.map(tile).join('')}</div></section>` : '';
@@ -375,6 +379,7 @@ function homePage(apps, cats) {
 <h1 class="sr-only">${SITE} — ${esc(TAGLINE)}</h1>
 ${hero}
 ${shelf('Sponsored', picked(apps, SF.sponsored).slice(0, 15), '')}
+${shelf('Coming soon', SOON.slice(0, 15), '/coming-soon/')}
 ${colRails.join('\n')}
 ${shelf('New releases', [...apps].sort(byNew).slice(0, 10), '/apps/')}
 ${shelf('Recently updated', [...apps].sort(byUpd).slice(0, 10), '/top/#updated')}
@@ -750,6 +755,44 @@ function devPage(d, cats) {
   return layout({ title, desc, path: d.path, body, ld, image: cover || logo || undefined, page: 'dev', cats });
 }
 
+const listAppsForSoon = (apps) => apps;
+function soonAppPage(a, apps, cats, crumbs, paras) {
+  const more = apps.filter((x) => x.id !== a.id && x.catSlug === a.catSlug).sort(byDl).slice(0, 10);
+  const label = soonLabel(a);
+  const info = [['Package', a.pkg], ['Category', `<a href="/category/${a.catSlug}/">${esc(a.catRaw)}</a>`, true], ['Requires', `Android ${a.minAndroid}+`],
+    ['Expected release', a.releaseDate ? dateFmt(Date.parse(a.releaseDate + 'T00:00:00Z')) : 'To be announced'], ['Developer', a.devPath ? `<a href="${a.devPath}">${esc(a.dev)}</a>` : a.dev, !!a.devPath], ['Language', a.language],
+    ['Website', a.website ? `<a href="${esc(a.website)}" rel="nofollow noopener" target="_blank">${esc(a.website.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a>` : '', true]
+  ].filter(([, v]) => v).map(([k, v, raw]) => `<div><dt>${k}</dt><dd>${raw ? v : esc(v)}</dd></div>`).join('');
+  const body = `${crumbHtml(crumbs)}
+<article class="app soon-app" data-app-id="${esc(a.id)}" data-slug="${esc(a.slug)}" data-name="${esc(a.name)}" data-icon="${esc(a.icon)}" data-soon="1">
+  <header class="app-head">
+    <img class="app-ic" src="${esc(a.icon)}" width="112" height="112" alt="${esc(a.name)} icon" fetchpriority="high">
+    <div class="app-main">
+      <h1>${esc(a.name)}</h1>
+      <p class="dev">${a.devPath ? `<a href="${a.devPath}" title="View developer profile">${esc(a.dev)}</a>` : esc(a.dev)}</p>
+      <ul class="facts">
+        <li><b class="soon-b">${esc(a.releaseDate ? label.replace('Expected ', '') : 'Soon')}</b><small>${a.releaseDate ? 'expected release' : 'coming soon'}</small></li>
+        <li><b id="preCount" data-n="${a.pre}">${fmtCount(a.pre)}</b><small>pre-registered</small></li>
+        <li><b>${esc(a.minAndroid)}+</b><small>Android</small></li>
+      </ul>
+      <div class="cta"><button class="btn btn-primary btn-lg" id="preBtn" type="button" data-id="${esc(a.id)}">${svg.bell}<span>Pre-register</span></button><button class="btn btn-ghost" id="shareBtn" type="button" aria-label="Share">${svg.share}<span>Share</span></button></div>
+      <p class="muted small" id="preNote">Pre-register and we will email you as soon as ${esc(a.name)} is released.</p>
+    </div>
+  </header>
+  <p class="soon-banner">${svg.bell}<span><b>Coming soon.</b> ${esc(label)}. This app is not available to download yet.</span></p>
+  ${a.short ? `<p class="tagline">${esc(a.short)}</p>` : ''}
+  ${a.shots.length ? `<section class="sec"><h2>Screenshots</h2><div class="shots">${a.shots.map((u, i) => `<img src="${esc(u)}" loading="lazy" decoding="async" alt="${esc(a.name)} screenshot ${i + 1}" data-zoom>`).join('')}</div></section>` : ''}
+  <section class="sec prose"><h2>About ${esc(a.name)}</h2><div class="clamp" id="desc">${paras}</div><button class="linkbtn more" id="descMore" type="button" aria-expanded="false" aria-controls="desc" hidden>Show more</button>${a.tags.length ? `<div class="chips">${a.tags.map((t) => `<a class="chip" href="/search/?q=${encodeURIComponent(t)}">${esc(t)}</a>`).join('')}</div>` : ''}</section>
+  <section class="sec"><h2>App information</h2><dl class="info">${info}</dl></section>
+  <section class="sec" id="dev-verification"><h2>Developer verification</h2><div class="card vf ${a.devVerified ? 'ok' : 'no'}"><div class="vf-ic">${svg.shield}</div><div><b>${a.devVerified ? 'Verified developer' : 'Unverified developer'}</b><p>${a.devVerified ? `${esc(a.dev)} has been checked by the ${SITE} team.` : `${esc(a.dev)} has not been verified by the ${SITE} team yet.`}</p></div></div></section>
+  ${shelf('You may also like', more)}
+</article>
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview"><button class="lb-close" type="button" aria-label="Close preview">×</button><img alt=""></div>`;
+  const ld = [crumbLd(crumbs)];
+  return layout({ title: `${a.name} — Coming soon | ${SITE}`, desc: a.short ? `${a.short} ${label} on ${SITE}. Pre-register to be notified at release.` : `${a.name} is coming soon to ${SITE}. Pre-register to be notified at release.`,
+    path: a.path, body, ld, page: 'app', cats, image: a.banner || (a.icon.startsWith('http') ? a.icon : undefined) });
+}
+
 function appPage(a, apps, cats) {
   const cat = cats.find((c) => c.slug === a.catSlug);
   const related = apps.filter((x) => x.id !== a.id && x.catSlug === a.catSlug).sort(byDl).slice(0, 10);
@@ -773,6 +816,7 @@ function appPage(a, apps, cats) {
     ['Website', a.website ? `<a href="${esc(a.website)}" rel="nofollow noopener" target="_blank">${esc(a.website.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a>` : '', true],
     ['Privacy policy', a.privacy ? `<a href="${esc(a.privacy)}" rel="nofollow noopener" target="_blank">View</a>` : '', true]
   ].filter(([, v]) => v).map(([k, v, raw]) => `<div><dt>${k}</dt><dd>${raw ? v : esc(v)}</dd></div>`).join('');
+  if (a.soon) return soonAppPage(a, listAppsForSoon(apps), cats, crumbs, paras);
   const title = `${a.name} ${a.version} APK Download — ${a.catRaw} | ${SITE}`;
   const desc = a.short ? `${a.short} Download ${a.name} ${a.version} APK for Android ${a.minAndroid}+${a.size ? ` (${a.size})` : ''} from ${SITE}.` : trunc(a.desc, 150) || `Download ${a.name} APK for Android.`;
   const dlBtn = a.downloadUrl
@@ -850,6 +894,8 @@ function sitemap(apps, cats, devs = []) {
     ...NAV_COLLECTIONS.map((c) => ({ loc: c.path, lm: last, p: '0.7', f: 'daily' })),
     ...cats.map((c) => ({ loc: `/category/${c.slug}/`, lm: c.last, p: '0.7', f: 'daily' })),
     ...devs.map((d) => ({ loc: d.path, lm: d.apps.reduce((m, a) => Math.max(m, a.updatedTs), 0), p: '0.6', f: 'weekly' })),
+    ...(SOON.length ? [{ loc: '/coming-soon/', lm: last, p: '0.6', f: 'daily' }] : []),
+    ...SOON.map((a) => ({ loc: a.path, lm: a.updatedTs, p: '0.5', f: 'weekly' })),
     ...apps.map((a) => ({ loc: a.path, lm: a.updatedTs, p: '0.8', f: 'weekly' }))
   ];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${escXml(BASE + u.loc)}</loc>${u.lm ? `<lastmod>${isoDate(u.lm)}</lastmod>` : ''}<changefreq>${u.f}</changefreq><priority>${u.p}</priority></url>`).join('\n')}\n</urlset>\n`;
@@ -882,11 +928,13 @@ async function main() {
   console.log(`[build] base url: ${BASE}`);
   const rawApps = await loadApps();
   const { data: reviews, known } = await loadReviews(rawApps.filter((a) => LIVE.has(str(a.status).toLowerCase())));
-  const apps = normalize(rawApps, reviews, known);
+  const allN = normalize(rawApps, reviews, known);
+  const apps = allN.filter((a) => !a.soon);
+  SOON = allN.filter((a) => a.soon).sort((x, y) => (x.releaseDate || '9999').localeCompare(y.releaseDate || '9999') || y.ts - x.ts);
   SF = await loadStorefront();
   console.log(`[build] storefront picks: ${SF.featured.length} featured, ${SF.editors.length} editors, ${SF.sponsored.length} sponsored`);
-  const DEVS = buildDevs(apps, await loadDevProfiles());
-  console.log(`[build] ${rawApps.length} app record(s), ${apps.length} live`);
+  const DEVS = buildDevs(allN, await loadDevProfiles());
+  console.log(`[build] ${rawApps.length} app record(s), ${apps.length} live, ${SOON.length} coming soon`);
 
   // ---- incremental build -------------------------------------------------------
   // Listing pages (home, /apps/, categories, top, sitemap, search index) are rebuilt only when an app
@@ -897,7 +945,7 @@ async function main() {
   const GEN = sha((await readFile(fileURLToPath(import.meta.url), 'utf8')) + ASSET_V + BASE + DB + JSON.stringify(SF));
   const prev = existsSync(STATE) ? JSON.parse(await readFile(STATE, 'utf8')) : null;
   const meta = (a) => sha(JSON.stringify({ ...a, dl: 0, rc: 0, rating: 0, reviews: 0 }));
-  const cur = Object.fromEntries(apps.map((a) => [a.id, { h: meta(a), dl: a.dl, rc: a.rc, rating: a.rating }]));
+  const cur = Object.fromEntries([...apps, ...SOON].map((a) => [a.id, { h: meta(a), dl: a.dl, rc: a.rc, rating: a.rating }]));
   const same = prev && prev.gen === GEN && !process.env.FULL_BUILD &&
     Object.keys(cur).length === Object.keys(prev.apps).length && Object.keys(cur).every((k) => prev.apps[k] && prev.apps[k].h === cur[k].h);
   // apps as shown in listings: frozen counters when nothing structural changed
@@ -923,7 +971,7 @@ async function main() {
 
   if (!same) {
     // clean previously generated folders, then rebuild every listing page
-    for (const d of ['discover', 'popular-apps', 'popular-games', 'editors-choice', 'apps', 'category', 'top', 'search', 'library', 'about', 'support', 'founder']) await rm(join(ROOT, d), { recursive: true, force: true });
+    for (const d of ['coming-soon', 'discover', 'popular-apps', 'popular-games', 'editors-choice', 'apps', 'category', 'top', 'search', 'library', 'about', 'support', 'founder']) await rm(join(ROOT, d), { recursive: true, force: true });
     await write('index.html', homePage(listApps, cats));
     await write('apps/index.html', listPage({
       title: `All Android Apps & Games — Free APK Download | ${SITE}`, h1: 'All apps', path: '/apps/', apps: [...listApps].sort(byDl), cats, page: 'apps',
@@ -936,11 +984,15 @@ async function main() {
     for (const c of cats) {
       await write(`category/${c.slug}/index.html`, listPage({
         title: `Best ${c.name} Apps for Android — Free APK Download | ${SITE}`, h1: `${c.name} apps`, path: `/category/${c.slug}/`,
-        apps: listApps.filter((a) => a.catSlug === c.slug).sort(byDl), cats, page: 'apps', activeCat: c.slug,
+        apps: [...listApps.filter((a) => a.catSlug === c.slug).sort(byDl), ...SOON.filter((a) => a.catSlug === c.slug)], cats, page: 'apps', activeCat: c.slug,
         intro: `Download the best ${c.name.toLowerCase()} apps for Android. ${c.count} ${c.count === 1 ? 'app' : 'apps'} with version, size and user reviews.`,
         crumbs: crumbHtml([['/', 'Home'], [null, c.name]])
       }));
     }
+    if (SOON.length) await write('coming-soon/index.html', listPage({
+      title: `Coming Soon — Upcoming Android Apps & Games | ${SITE}`, h1: 'Coming soon', path: '/coming-soon/', apps: SOON, cats, page: 'apps',
+      intro: 'Apps and games that are almost here. Pre-register to get an email the moment one is released.', crumbs: crumbHtml([['/', 'Home'], [null, 'Coming soon']])
+    }));
     await write('top/index.html', topPage(listApps, cats));
     await write('search/index.html', searchPage(listApps, cats));
     await write('library/index.html', libraryPage(cats));
@@ -962,12 +1014,13 @@ async function main() {
     await write('apps-index.json', JSON.stringify({
       count: listApps.length,
       apps: [...listApps].sort(byDl).map((a) => ({ id: a.id, slug: a.slug, name: a.name, icon: a.icon, cat: a.catRaw, dev: a.dev, size: a.size, ver: a.version, dl: a.dl,
-        r: a.rc > 0 ? a.rating : 0, short: trunc(a.short, 90), tags: a.tags }))
+        r: a.rc > 0 ? a.rating : 0, short: trunc(a.short, 90), tags: a.tags })),
+      upcoming: SOON.map((a) => ({ id: a.id, slug: a.slug, name: a.name, icon: a.icon, banner: a.banner, cat: a.catRaw, dev: a.dev, short: trunc(a.short, 90), date: a.releaseDate, pre: a.pre, tags: a.tags }))
     }));
   }
 
   // app pages: always refreshed with live counters + reviews; git only sees the ones that actually changed
-  for (const a of apps) await write(`apps/${a.slug}/index.html`, appPage(a, listApps, cats));
+  for (const a of [...apps, ...SOON]) await write(`apps/${a.slug}/index.html`, appPage(a, listApps, cats));
   // developer profile pages (always refreshed: they show profile edits and live counters)
   await rm(join(ROOT, 'developer'), { recursive: true, force: true });
   const devApps = (d) => ({ ...d, apps: d.apps.map((x) => listApps.find((l) => l.id === x.id) || x) });
