@@ -472,3 +472,11 @@ a.chip:hover,button.chip:hover{border-color:var(--brand);text-decoration:none}
 .fb-topic input:focus-visible+span{outline:2px solid var(--brand);outline-offset:2px}
 .fb-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:520px){.fb-two{grid-template-columns:1fr}}
+
+/* coming soon / pre-register */
+.soon{color:#b45309;font-weight:700}
+html[data-theme=dark] .soon{color:#fbbf24}
+.soon-banner{display:flex;align-items:center;gap:10px;margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:var(--text);font-size:14px}
+.soon-banner svg{width:20px;height:20px;flex:none;fill:none;stroke:#d97706;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn svg{flex:none}
+.soon-b{font-size:15px}

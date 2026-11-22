@@ -34,7 +34,7 @@
   /* ---------- apps index (loaded lazily, only when needed) ---------- */
   var indexPromise;
   function loadIndex() {
-    if (!indexPromise) indexPromise = fetch('/apps-index.json').then(function (r) { return r.json(); }).then(function (d) { return d.apps || []; }).catch(function () { return []; });
+    if (!indexPromise) indexPromise = fetch('/apps-index.json').then(function (r) { return r.json(); }).then(function (d) { return (d.apps || []).concat((d.upcoming || []).map(function (u) { u.soon = 1; return u; })); }).catch(function () { return []; });
     return indexPromise;
   }
   function matches(a, q, f) {
@@ -49,7 +49,7 @@
   function rowHtml(a, note) {
     return '<a class="row" href="/apps/' + encodeURIComponent(a.slug) + '/"><img class="ic" src="' + esc(a.icon) + '" width="64" height="64" loading="lazy" alt="">' +
       '<span class="meta"><span class="nm">' + esc(a.name) + '</span><span class="ds">' + esc(a.short || a.cat) + '</span>' +
-      '<span class="st">' + (a.r ? '<span class="star">★</span> ' + a.r.toFixed(1) : '<span class="new">New</span>') + ' · ' + esc(a.cat) + (a.size ? ' · ' + esc(a.size) : '') + '</span>' + (note ? '<span class="st">' + esc(note) + '</span>' : '') + '</span></a>';
+      '<span class="st">' + (a.soon ? '<span class="soon">Coming soon</span>' : (a.r ? '<span class="star">★</span> ' + a.r.toFixed(1) : '<span class="new">New</span>')) + ' · ' + esc(a.cat) + (a.size ? ' · ' + esc(a.size) : '') + '</span>' + (note ? '<span class="st">' + esc(note) + '</span>' : '') + '</span></a>';
   }
 
   /* ---------- header search suggestions ---------- */
@@ -681,6 +681,34 @@
     if (navigator.share) navigator.share(data).catch(function () { });
     else if (navigator.clipboard) navigator.clipboard.writeText(data.url).then(function () { toast('Link copied'); });
   });
+
+  // pre-register (Coming soon apps): stored at preRegs/<app>/<uid>; the email lets us tell the user at release
+  var preBtn = $('#preBtn');
+  if (preBtn) {
+    var preKey = 'zt_pre_' + id, preCount = $('#preCount'), preNote = $('#preNote');
+    var paintPre = function (on) {
+      preBtn.setAttribute('aria-pressed', on); $('span', preBtn).textContent = on ? 'Pre-registered ✓' : 'Pre-register';
+      preBtn.classList.toggle('btn-primary', !on); preBtn.classList.toggle('btn-ghost', on);
+      if (preNote) preNote.textContent = on ? 'You are on the list. We will email you when it is released.' : 'Pre-register and we will email you as soon as this app is released.';
+    };
+    var bumpPre = function (d) { if (!preCount) return; var n = Math.max(0, (+preCount.dataset.n || 0) + d); preCount.dataset.n = n; preCount.textContent = n >= 1000 ? (n / 1000).toFixed(n < 10000 ? 1 : 0).replace(/\.0$/, '') + 'K' : String(n); };
+    paintPre(!!store.get(preKey, false));
+    authUser().then(function (u) { if (!u) return; return u.getIdToken().then(function (t) { return dbReq('GET', 'preRegs/' + encodeURIComponent(id) + '/' + u.uid, undefined, t); }).then(function (r) { store.set(preKey, !!r); paintPre(!!r); }); }).catch(function () { });
+    preBtn.addEventListener('click', function () {
+      if (!signed()) { needSignIn('Sign in to pre-register'); return; }
+      var was = !!store.get(preKey, false);
+      preBtn.disabled = true;
+      withToken(function (user, t) {
+        var path = 'preRegs/' + encodeURIComponent(id) + '/' + user.uid;
+        var req = was ? dbReq('DELETE', path, undefined, t) : dbReq('PUT', path, { t: Date.now(), email: user.email || '' }, t);
+        return req.then(function () {
+          store.set(preKey, !was); paintPre(!was); bumpPre(was ? -1 : 1);
+          try { fetch(DB + '/apps/' + encodeURIComponent(id) + '/preRegCount.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: was ? -1 : 1 } }) }).catch(function () { }); } catch (err) { /* counter only */ }
+          toast(was ? 'Pre-registration removed' : 'Pre-registered! We will email you at release.');
+        });
+      }).catch(function (err) { if (!err || err.message !== 'signin') toast('Could not save. Please try again.'); }).then(function () { preBtn.disabled = false; });
+    });
+  }
 
   // The page is rebuilt every few minutes; until then show this visitor's own download/review right away
   function revEl(r) {
