@@ -682,14 +682,14 @@
     else if (navigator.clipboard) navigator.clipboard.writeText(data.url).then(function () { toast('Link copied'); });
   });
 
-  // pre-register (Coming soon apps): stored at preRegs/<app>/<uid>; the email lets us tell the user at release
+  // pre-register (Coming soon apps): stored at preRegs/<app>/<uid>; the UptoZishu Android app notifies the user at release
   var preBtn = $('#preBtn');
   if (preBtn) {
     var preKey = 'zt_pre_' + id, preCount = $('#preCount'), preNote = $('#preNote');
     var paintPre = function (on) {
       preBtn.setAttribute('aria-pressed', on); $('span', preBtn).textContent = on ? 'Pre-registered ✓' : 'Pre-register';
       preBtn.classList.toggle('btn-primary', !on); preBtn.classList.toggle('btn-ghost', on);
-      if (preNote) preNote.textContent = on ? 'You are on the list. We will email you when it is released.' : 'Pre-register and we will email you as soon as this app is released.';
+      if (preNote) preNote.textContent = on ? 'You are on the list. The UptoZishu app will notify you when it is released.' : 'Pre-register and the UptoZishu app on your phone will notify you as soon as this app is released.';
     };
     var bumpPre = function (d) { if (!preCount) return; var n = Math.max(0, (+preCount.dataset.n || 0) + d); preCount.dataset.n = n; preCount.textContent = n >= 1000 ? (n / 1000).toFixed(n < 10000 ? 1 : 0).replace(/\.0$/, '') + 'K' : String(n); };
     paintPre(!!store.get(preKey, false));
@@ -700,11 +700,11 @@
       preBtn.disabled = true;
       withToken(function (user, t) {
         var path = 'preRegs/' + encodeURIComponent(id) + '/' + user.uid;
-        var req = was ? dbReq('DELETE', path, undefined, t) : dbReq('PUT', path, { t: Date.now(), email: user.email || '' }, t);
+        var req = was ? dbReq('DELETE', path, undefined, t) : dbReq('PUT', path, { t: Date.now() }, t);
         return req.then(function () {
           store.set(preKey, !was); paintPre(!was); bumpPre(was ? -1 : 1);
           try { fetch(DB + '/apps/' + encodeURIComponent(id) + '/preRegCount.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: was ? -1 : 1 } }) }).catch(function () { }); } catch (err) { /* counter only */ }
-          toast(was ? 'Pre-registration removed' : 'Pre-registered! We will email you at release.');
+          toast(was ? 'Pre-registration removed' : 'Pre-registered! You will be notified in the UptoZishu app.');
         });
       }).catch(function (err) { if (!err || err.message !== 'signin') toast('Could not save. Please try again.'); }).then(function () { preBtn.disabled = false; });
     });
