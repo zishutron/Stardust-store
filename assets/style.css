@@ -510,3 +510,4 @@ button.irow,a.irow{display:flex;align-items:center;gap:14px;padding:12px 0;curso
 .vfbig.ok{background:#16833f}.vfbig.no{background:#d97706}
 .vfbig svg{width:42px;height:42px;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
 .isheet-body h4{margin:0 0 4px;font-size:18px}
+.uzbtns{display:flex;gap:10px;margin-top:16px}.uzbtns .btn{flex:1;justify-content:center;text-align:center;text-decoration:none}

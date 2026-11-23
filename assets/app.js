@@ -698,31 +698,38 @@
     });
   });
 
-  // pre-register (Coming soon apps): stored at preRegs/<app>/<uid>; the UptoZishu Android app notifies the user at release
+  // pre-register (Coming soon apps): it only works inside the UptoZishu Android app (the app notifies the user at release).
+  // The button opens this app's page in the Android app; without the app, a popup offers the download.
+  var UZ_PKG = 'com.uptozishu', UZ_PAGE = '/apps/com.uptozishu/'; // the UptoZishu app's own page in this store (URL = package name)
   var preBtn = $('#preBtn');
   if (preBtn) {
-    var preKey = 'zt_pre_' + id, preCount = $('#preCount'), preNote = $('#preNote');
-    var paintPre = function (on) {
-      preBtn.setAttribute('aria-pressed', on); $('span', preBtn).textContent = on ? 'Pre-registered ✓' : 'Pre-register';
-      preBtn.classList.toggle('btn-primary', !on); preBtn.classList.toggle('btn-ghost', on);
-      if (preNote) preNote.textContent = on ? 'You are on the list. The UptoZishu app will notify you when it is released.' : 'Pre-register and the UptoZishu app on your phone will notify you as soon as this app is released.';
+    var preNote = $('#preNote');
+    if (preNote) preNote.textContent = 'Pre-registering works only in the UptoZishu app. Tap Pre-register to open this app in it and you will be notified when it is released.';
+    var showGetApp = function () {
+      if ($('.isheet-ov.uzget')) return;
+      var ov = document.createElement('div'); ov.className = 'isheet-ov uzget';
+      ov.innerHTML = '<div class="isheet" role="dialog" aria-modal="true"><div class="isheet-grab"></div><div class="isheet-body"><h3>Pre-register in the app</h3><p>Pre-register only works on the UptoZishu app, not on the website. Open the UptoZishu app page, install the app, then open this page in it and tap Pre-register.</p><div class="uzbtns"><button type="button" class="btn btn-ghost" data-x="cancel">Cancel</button><a class="btn btn-primary" data-x="get" href="' + UZ_PAGE + '">Download UptoZishu</a></div></div></div>';
+      var close = function () { ov.classList.remove('on'); document.removeEventListener('keydown', onKey); setTimeout(function () { ov.remove(); }, 220); };
+      var onKey = function (e) { if (e.key === 'Escape') close(); };
+      ov.addEventListener('click', function (e) { if (e.target === ov || e.target.classList.contains('isheet-grab') || (e.target.closest && e.target.closest('[data-x="cancel"]'))) close(); else if (e.target.closest && e.target.closest('[data-x="get"]')) setTimeout(close, 300); });
+      document.addEventListener('keydown', onKey);
+      document.body.appendChild(ov);
+      requestAnimationFrame(function () { ov.classList.add('on'); });
     };
-    var bumpPre = function (d) { if (!preCount) return; var n = Math.max(0, (+preCount.dataset.n || 0) + d); preCount.dataset.n = n; preCount.textContent = n >= 1000 ? (n / 1000).toFixed(n < 10000 ? 1 : 0).replace(/\.0$/, '') + 'K' : String(n); };
-    paintPre(!!store.get(preKey, false));
-    authUser().then(function (u) { if (!u) return; return u.getIdToken().then(function (t) { return dbReq('GET', 'preRegs/' + encodeURIComponent(id) + '/' + u.uid, undefined, t); }).then(function (r) { store.set(preKey, !!r); paintPre(!!r); }); }).catch(function () { });
+    // back from the Android "app not installed" fallback: the URL carries #uz-noapp
+    if (location.hash === '#uz-noapp') { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { } showGetApp(); }
     preBtn.addEventListener('click', function () {
-      if (!signed()) { needSignIn('Sign in to pre-register'); return; }
-      var was = !!store.get(preKey, false);
-      preBtn.disabled = true;
-      withToken(function (user, t) {
-        var path = 'preRegs/' + encodeURIComponent(id) + '/' + user.uid;
-        var req = was ? dbReq('DELETE', path, undefined, t) : dbReq('PUT', path, { t: Date.now() }, t);
-        return req.then(function () {
-          store.set(preKey, !was); paintPre(!was); bumpPre(was ? -1 : 1);
-          try { fetch(DB + '/apps/' + encodeURIComponent(id) + '/preRegCount.json', { method: 'PUT', body: JSON.stringify({ '.sv': { increment: was ? -1 : 1 } }) }).catch(function () { }); } catch (err) { /* counter only */ }
-          toast(was ? 'Pre-registration removed' : 'Pre-registered! You will be notified in the UptoZishu app.');
-        });
-      }).catch(function (err) { if (!err || err.message !== 'signin') toast('Could not save. Please try again.'); }).then(function () { preBtn.disabled = false; });
+      var android = /Android/i.test(navigator.userAgent);
+      if (!android) { showGetApp(); return; }
+      var page = location.origin + location.pathname + location.search;
+      var gone = false, t = null;
+      var stop = function () { gone = true; if (t) clearTimeout(t); document.removeEventListener('visibilitychange', onVis); window.removeEventListener('pagehide', stop); window.removeEventListener('blur', stop); };
+      var onVis = function () { if (document.hidden) stop(); };
+      document.addEventListener('visibilitychange', onVis); window.addEventListener('pagehide', stop); window.addEventListener('blur', stop);
+      // browsers without intent links: if the page is still visible after a moment, the app did not open
+      t = setTimeout(function () { if (!gone) { stop(); showGetApp(); } }, 2200);
+      // Chrome opens the app when installed, otherwise loads the fallback page (this page with #uz-noapp)
+      location.href = 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=' + UZ_PKG + ';S.browser_fallback_url=' + encodeURIComponent(page + '#uz-noapp') + ';end';
     });
   }
 
