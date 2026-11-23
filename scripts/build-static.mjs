@@ -785,7 +785,7 @@ function soonAppPage(a, apps, cats, crumbs, paras) {
         <li><b>${esc(a.minAndroid)}+</b><small>Android</small></li>
       </ul>
       <div class="cta"><button class="btn btn-primary btn-lg" id="preBtn" type="button" data-id="${esc(a.id)}">${svg.bell}<span>Pre-register</span></button><button class="btn btn-ghost" id="shareBtn" type="button" aria-label="Share">${svg.share}<span>Share</span></button></div>
-      <p class="muted small" id="preNote">Pre-register and the UptoZishu Android app will notify you as soon as ${esc(a.name)} is released.</p>
+      <p class="muted small" id="preNote">Pre-registering works only in the UptoZishu app. Tap Pre-register to open this app in it and you will be notified when ${esc(a.name)} is released.</p>
     </div>
   </header>
   <p class="soon-banner">${svg.bell}<span><b>Coming soon.</b> ${esc(label)}. This app is not available to download yet.</span></p>
