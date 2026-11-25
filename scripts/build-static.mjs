@@ -54,7 +54,7 @@ const SITE_DESC = 'UptoZishu is a free Android app store. Discover, review and d
 const FALLBACK_ICON = '/favicon.png';
 const MAX_REVIEWS_BAKED = 15;
 
-const LIVE = new Set(['live', 'approved']);
+const LIVE = new Set(['live', 'approved']); // only these two statuses are public; an app without a status is not listed
 let SOON = []; // approved pre-release apps (status "upcoming"): shown as Coming soon, pre-register instead of download
 const soonLabel = (a) => { const t = a.releaseDate ? Date.parse(a.releaseDate + 'T00:00:00Z') : 0; return t && t > Date.now() - 86400000 ? `Expected ${dateFmt(t)}` : 'Coming soon'; };
 const CAT_ICON = {
